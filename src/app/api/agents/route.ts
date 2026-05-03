@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
 export async function GET(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await getSupabaseAdmin()
     .from('profiles')
     .select('*')
     .order('full_name')
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { data: profile } = await supabaseAdmin
+  const { data: profile } = await getSupabaseAdmin()
     .from('profiles')
     .select('role')
     .eq('id', user.id)
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'full_name, email and password required' }, { status: 400 })
   }
 
-  const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+  const { data: authUser, error: authError } = await getSupabaseAdmin().auth.admin.createUser({
     email,
     password,
     email_confirm: true,
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
 
   if (authError) return NextResponse.json({ error: authError.message }, { status: 400 })
 
-  const { data: newProfile, error: profileError } = await supabaseAdmin
+  const { data: newProfile, error: profileError } = await getSupabaseAdmin()
     .from('profiles')
     .insert({ id: authUser.user.id, full_name, email, role: 'agent' })
     .select()

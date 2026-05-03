@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { getConnectionState, fetchInstance, setWebhook } from '@/lib/evolution/api'
 
 export async function GET(req: NextRequest) {
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   const evolutionKey = process.env.EVOLUTION_API_KEY
   if (!evolutionUrl || !evolutionKey) return NextResponse.json({ state: 'close' })
 
-  const { data: settings } = await supabaseAdmin
+  const { data: settings } = await getSupabaseAdmin()
     .from('company_settings')
     .select('*')
     .limit(1)
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
         try { await setWebhook(cfg, `${appUrl}/api/webhook/evolution`) } catch {}
       }
 
-      await supabaseAdmin
+      await getSupabaseAdmin()
         .from('company_settings')
         .update({ whatsapp_connected: true, whatsapp_number: number || null })
         .eq('id', settings.id)

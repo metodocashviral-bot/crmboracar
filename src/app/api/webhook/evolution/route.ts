@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { phoneFromJid } from '@/lib/utils'
 
 export async function POST(req: NextRequest) {
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 
     // Upsert contact
     let contactId: string | null = null
-    const { data: existing } = await supabaseAdmin
+    const { data: existing } = await getSupabaseAdmin()
       .from('contacts')
       .select('id')
       .eq('phone', phone)
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     if (existing) {
       contactId = (existing as { id: string }).id
     } else {
-      const { data: newContact } = await supabaseAdmin
+      const { data: newContact } = await getSupabaseAdmin()
         .from('contacts')
         .insert({ phone, name: pushName || null })
         .select('id')
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     if (!contactId) return NextResponse.json({ received: true })
 
     // Find or create open ticket
-    const { data: openTicket } = await supabaseAdmin
+    const { data: openTicket } = await getSupabaseAdmin()
       .from('tickets')
       .select('id, unread_count')
       .eq('contact_id', contactId)
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     let ticketId: string
     if (openTicket) {
       ticketId = openTicket.id
-      await supabaseAdmin
+      await getSupabaseAdmin()
         .from('tickets')
         .update({
           unread_count: (openTicket.unread_count || 0) + 1,
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
         })
         .eq('id', ticketId)
     } else {
-      const { data: newTicket } = await supabaseAdmin
+      const { data: newTicket } = await getSupabaseAdmin()
         .from('tickets')
         .insert({
           contact_id: contactId,
@@ -86,14 +86,14 @@ export async function POST(req: NextRequest) {
 
     // Save message (avoid duplicate)
     if (whatsappMessageId) {
-      const { count } = await supabaseAdmin
+      const { count } = await getSupabaseAdmin()
         .from('messages')
         .select('id', { count: 'exact', head: true })
         .eq('whatsapp_message_id', whatsappMessageId)
       if ((count ?? 0) > 0) return NextResponse.json({ received: true })
     }
 
-    await supabaseAdmin.from('messages').insert({
+    await getSupabaseAdmin().from('messages').insert({
       ticket_id: ticketId,
       contact_id: contactId,
       sender_type: 'contact',

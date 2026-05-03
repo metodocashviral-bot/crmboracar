@@ -6,7 +6,11 @@
       "Bash(npx tsc *)",
       "Bash(npm run *)",
       "Bash(node -e \"const pkg = require\\('./package.json'\\); console.log\\(pkg.dependencies.next\\)\")",
-      "Bash(Remove-Item \"d:\\\\Leonardo\\\\Boracar\\\\Automação\\\\crmboracar\\\\src\\\\middleware.ts\")"
+      "Bash(Remove-Item \"d:\\\\Leonardo\\\\Boracar\\\\Automação\\\\crmboracar\\\\src\\\\middleware.ts\")",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git add *)",
+      "Bash(node -e ' *)"
     ]
   }
 }

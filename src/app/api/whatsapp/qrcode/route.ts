@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { getQRCode } from '@/lib/evolution/api'
 
 export async function GET(req: NextRequest) {
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   const evolutionKey = process.env.EVOLUTION_API_KEY
   if (!evolutionUrl || !evolutionKey) return NextResponse.json({ error: 'Not configured' }, { status: 500 })
 
-  const { data: settings } = await supabaseAdmin
+  const { data: settings } = await getSupabaseAdmin()
     .from('company_settings')
     .select('evolution_instance')
     .limit(1)

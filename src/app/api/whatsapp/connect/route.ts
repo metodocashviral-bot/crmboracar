@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { createInstance } from '@/lib/evolution/api'
 
 export async function POST(req: NextRequest) {
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Buscar settings
-    const { data: settings, error: settingsError } = await supabaseAdmin
+    const { data: settings, error: settingsError } = await getSupabaseAdmin()
       .from('company_settings')
       .select('id, evolution_instance')
       .limit(1)
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Salvar nome da instância
-    const { error: updateError } = await supabaseAdmin
+    const { error: updateError } = await getSupabaseAdmin()
       .from('company_settings')
       .update({ evolution_instance: instanceName, whatsapp_connected: false })
       .eq('id', settings.id)

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { sendTextMessage } from '@/lib/evolution/api'
 
 export async function POST(req: NextRequest) {
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Evolution API não configurada no servidor' }, { status: 500 })
   }
 
-  const { data: ticket } = await supabaseAdmin
+  const { data: ticket } = await getSupabaseAdmin()
     .from('tickets')
     .select('*, contact:contacts(*)')
     .eq('id', ticketId)
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
 
   if (!ticket) return NextResponse.json({ error: 'Ticket not found' }, { status: 404 })
 
-  const { data: settings } = await supabaseAdmin
+  const { data: settings } = await getSupabaseAdmin()
     .from('company_settings')
     .select('evolution_instance')
     .limit(1)
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Evolution API: ${err.message}` }, { status: 500 })
   }
 
-  const { data: message } = await supabaseAdmin
+  const { data: message } = await getSupabaseAdmin()
     .from('messages')
     .insert({
       ticket_id: ticketId,
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     .select('*, agent:profiles(*)')
     .single()
 
-  await supabaseAdmin
+  await getSupabaseAdmin()
     .from('tickets')
     .update({ last_message_at: new Date().toISOString() })
     .eq('id', ticketId)
