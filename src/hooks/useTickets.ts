@@ -13,11 +13,13 @@ export function useTickets(agentFilter?: string, search?: string) {
     let query = supabase
       .from('tickets')
       .select(`
-        *,
-        contact:contacts(*),
-        assigned_agent:profiles(*)
+        id, status, unread_count, last_message_at, assigned_agent_id, contact_id,
+        contact:contacts(id, name, phone, profile_pic_url),
+        assigned_agent:profiles(id, full_name)
       `)
+      .neq('status', 'finished')
       .order('last_message_at', { ascending: false })
+      .limit(100)
 
     if (agentFilter) {
       query = query.eq('assigned_agent_id', agentFilter)
@@ -29,9 +31,7 @@ export function useTickets(agentFilter?: string, search?: string) {
       if (search) {
         const q = search.toLowerCase()
         filtered = filtered.filter(
-          (t) =>
-            t.contact?.name?.toLowerCase().includes(q) ||
-            t.contact?.phone?.includes(q)
+          (t) => t.contact?.name?.toLowerCase().includes(q) || t.contact?.phone?.includes(q)
         )
       }
       setTickets(filtered)
