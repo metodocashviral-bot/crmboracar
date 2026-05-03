@@ -32,7 +32,7 @@ export default function TransferModal({ open, onClose, ticketId, currentAgentId,
       .select('*')
       .eq('is_active', true)
       .neq('id', currentAgentId || '')
-      .then(({ data }) => { if (data) setAgents(data) })
+      .then(({ data }: { data: Profile[] | null }) => { if (data) setAgents(data) })
   }, [open, currentAgentId])
 
   async function handleTransfer() {
