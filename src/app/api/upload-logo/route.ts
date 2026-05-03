@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
 
+async function ensureBucket(admin: ReturnType<typeof getSupabaseAdmin>) {
+  const { data: buckets } = await admin.storage.listBuckets()
+  const exists = buckets?.some((b) => b.name === 'logos')
+  if (!exists) {
+    await admin.storage.createBucket('logos', { public: true, fileSizeLimit: 5242880 })
+  }
+}
+
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -21,6 +29,8 @@ export async function POST(req: NextRequest) {
   const buffer = Buffer.from(arrayBuffer)
 
   const admin = getSupabaseAdmin()
+
+  await ensureBucket(admin)
 
   const { error: uploadError } = await admin.storage
     .from('logos')
