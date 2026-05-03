@@ -50,12 +50,24 @@ export default function TransferModal({ open, onClose, ticketId, currentAgentId,
     })
 
     const targetAgent = agents.find((a) => a.id === selected)
+    const transferMsg = `${profile?.full_name || 'Atendente'} transferiu o atendimento para ${targetAgent?.full_name || 'outro atendente'}`
+
+    const { data: ticketData } = await supabase.from('tickets').select('contact_id').eq('id', ticketId).single()
+
     await supabase.from('messages').insert({
       ticket_id: ticketId,
-      contact_id: (await supabase.from('tickets').select('contact_id').eq('id', ticketId).single()).data?.contact_id,
+      contact_id: ticketData?.contact_id,
       sender_type: 'system',
-      content: `${profile?.full_name || 'Atendente'} transferiu o atendimento para ${targetAgent?.full_name || 'outro atendente'}`,
+      content: transferMsg,
     })
+
+    // Send WhatsApp message to contact (names in bold)
+    const transferMsgWpp = `*${profile?.full_name || 'Atendente'}* transferiu o atendimento para *${targetAgent?.full_name || 'outro atendente'}*`
+    fetch('/api/send-message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticketId, content: transferMsgWpp, agentId: profile?.id, noPrefix: true }),
+    }).catch(() => {})
 
     toast.success('Atendimento transferido')
     setLoading(false)

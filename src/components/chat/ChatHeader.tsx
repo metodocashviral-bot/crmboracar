@@ -42,14 +42,27 @@ export default function ChatHeader({ ticket, onUpdate }: ChatHeaderProps) {
     const updates: Record<string, unknown> = { status }
     if (status === 'finished') updates.finished_at = new Date().toISOString()
     await supabase.from('tickets').update(updates).eq('id', ticket.id)
+
+    const msg = status === 'finished'
+      ? `${profile?.full_name || 'Atendente'} finalizou o atendimento`
+      : `${profile?.full_name || 'Atendente'} reabriu o atendimento`
+
     await supabase.from('messages').insert({
       ticket_id: ticket.id,
       contact_id: ticket.contact_id,
       sender_type: 'system',
-      content: status === 'finished'
-        ? `${profile?.full_name || 'Atendente'} finalizou o atendimento`
-        : `${profile?.full_name || 'Atendente'} reabriu o atendimento`,
+      content: msg,
     })
+
+    const wppContent = status === 'finished'
+      ? `*${profile?.full_name || 'Atendente'}* finalizou o atendimento`
+      : `*${profile?.full_name || 'Atendente'}* reabriu o atendimento`
+    fetch('/api/send-message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticketId: ticket.id, content: wppContent, agentId: profile?.id, noPrefix: true }),
+    }).catch(() => {})
+
     toast.success(status === 'finished' ? 'Atendimento finalizado' : 'Atendimento reaberto')
     setLoading(false)
     onUpdate()

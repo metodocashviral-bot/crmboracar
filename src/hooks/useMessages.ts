@@ -32,5 +32,9 @@ export function useMessages(ticketId: string) {
     })
   }
 
-  return { messages, loading, refetch: fetchMessages, addMessage }
+  function removeMessage(id: string) {
+    setMessages((prev) => prev.filter((m) => m.id !== id))
+  }
+
+  return { messages, loading, refetch: fetchMessages, addMessage, removeMessage }
 }

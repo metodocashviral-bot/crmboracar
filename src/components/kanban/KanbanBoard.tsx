@@ -5,6 +5,7 @@ import { DndContext, DragEndEvent, DragOverEvent, PointerSensor, useSensor, useS
 import { createClient } from '@/lib/supabase/client'
 import { useRealtimeTickets } from '@/hooks/useRealtime'
 import { useAppStore } from '@/stores/appStore'
+import { useRouter } from 'next/navigation'
 import KanbanColumn from './KanbanColumn'
 import FollowUpModal from '@/components/modals/FollowUpModal'
 import type { Ticket, TicketStatus } from '@/types'
@@ -29,6 +30,7 @@ interface KanbanBoardProps {
 
 export default function KanbanBoard({ tickets, onRefresh, activeTicketId }: KanbanBoardProps) {
   const { profile } = useAppStore()
+  const router = useRouter()
   const [followUpTicket, setFollowUpTicket] = useState<Ticket | null>(null)
 
   useRealtimeTickets(onRefresh)
@@ -41,7 +43,15 @@ export default function KanbanBoard({ tickets, onRefresh, activeTicketId }: Kanb
   }, [])
 
   const getByCol = useCallback((col: KanbanCol): Ticket[] => {
-    return tickets.filter((t) => getTicketCol(t) === col)
+    const filtered = tickets.filter((t) => getTicketCol(t) === col)
+    if (col === 'follow_up') {
+      return [...filtered].sort((a, b) => {
+        if (!a.follow_up_date) return 1
+        if (!b.follow_up_date) return -1
+        return new Date(a.follow_up_date).getTime() - new Date(b.follow_up_date).getTime()
+      })
+    }
+    return filtered
   }, [tickets, getTicketCol])
 
   // Resolve over.id → column (over.id may be a ticket id or a column id)
@@ -55,15 +65,29 @@ export default function KanbanBoard({ tickets, onRefresh, activeTicketId }: Kanb
   async function startAttendance(ticket: Ticket) {
     if (!profile) return
     const supabase = createClient()
+
     await supabase.from('tickets').update({ assigned_agent_id: profile.id }).eq('id', ticket.id)
+
+    const greeting = `${profile.full_name} iniciou o atendimento`
+    const greetingWpp = `*${profile.full_name}* iniciou o atendimento`
+
+    // System message in DB
     await supabase.from('messages').insert({
       ticket_id: ticket.id,
       contact_id: ticket.contact_id,
       sender_type: 'system',
-      content: `${profile.full_name} iniciou o atendimento`,
+      content: greeting,
     })
-    toast.success('Atendimento iniciado')
+
+    // Send WhatsApp message to contact
+    fetch('/api/send-message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticketId: ticket.id, content: greetingWpp, agentId: profile.id, noPrefix: true }),
+    }).catch(() => {})
+
     onRefresh()
+    router.push(`/chat/${ticket.id}`)
   }
 
   async function moveTicket(ticket: Ticket, toCol: KanbanCol, followUpDate?: string) {
@@ -76,8 +100,24 @@ export default function KanbanBoard({ tickets, onRefresh, activeTicketId }: Kanb
       updates.assigned_agent_id = profile.id
     }
     const { error } = await supabase.from('tickets').update(updates).eq('id', ticket.id)
-    if (error) toast.error('Erro ao mover atendimento')
-    else onRefresh()
+    if (error) { toast.error('Erro ao mover atendimento'); return }
+
+    if (toCol === 'finished' && profile) {
+      const msg = `${profile.full_name} finalizou o atendimento`
+      await supabase.from('messages').insert({
+        ticket_id: ticket.id,
+        contact_id: ticket.contact_id,
+        sender_type: 'system',
+        content: msg,
+      })
+      fetch('/api/send-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticketId: ticket.id, content: `*${profile.full_name}* finalizou o atendimento`, agentId: profile.id, noPrefix: true }),
+      }).catch(() => {})
+    }
+
+    onRefresh()
   }
 
   function handleDragEnd(event: DragEndEvent) {

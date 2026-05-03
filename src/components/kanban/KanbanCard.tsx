@@ -125,31 +125,41 @@ export default function KanbanCard({ ticket, isActive, isWaiting, onStartAttenda
         </>
       )}
 
+      {/* Follow-up badge — shown above footer when applicable */}
+      {ticket.status === 'follow_up' && ticket.follow_up_date && (
+        <div style={{ marginTop: 8 }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            padding: '4px 10px',
+            borderRadius: 'var(--radius-full)',
+            fontSize: 11, fontWeight: 600,
+            background: followUpPast ? '#fef2f2' : '#f5f3ff',
+            color: followUpPast ? '#ef4444' : '#7c3aed',
+            border: `1px solid ${followUpPast ? '#fecaca' : '#ddd6fe'}`,
+          }}>
+            <Calendar size={11} style={{ flexShrink: 0 }} />
+            {followUpPast
+              ? `Vencido · ${format(new Date(ticket.follow_up_date), "dd/MM 'às' HH:mm", { locale: ptBR })}`
+              : format(new Date(ticket.follow_up_date), "dd/MM 'às' HH:mm", { locale: ptBR })
+            }
+          </div>
+        </div>
+      )}
+
       {/* Rodapé */}
       <div className="flex items-center justify-between gap-1 mt-2">
         <div className="flex items-center gap-1 min-w-0">
           {isWaiting ? (
             <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 600 }}>Aguardando atendimento</span>
           ) : (
-            <>
-              {ticket.assigned_agent && (
-                <span
-                  className="truncate font-medium"
-                  style={{ fontSize: 11, padding: '2px 8px', background: 'var(--bg-surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-full)', color: 'var(--text-secondary)', maxWidth: 90 }}
-                >
-                  {ticket.assigned_agent.full_name.split(' ')[0]}
-                </span>
-              )}
-              {ticket.status === 'follow_up' && ticket.follow_up_date && (
-                <span
-                  className="flex items-center gap-1"
-                  style={{ fontSize: 11, color: followUpPast ? '#ef4444' : '#8b5cf6', fontWeight: 500 }}
-                >
-                  <Calendar size={10} />
-                  {followUpPast ? 'Vencido' : format(new Date(ticket.follow_up_date), "dd/MM HH:mm", { locale: ptBR })}
-                </span>
-              )}
-            </>
+            ticket.assigned_agent && (
+              <span
+                className="truncate font-medium"
+                style={{ fontSize: 11, padding: '2px 8px', background: 'var(--bg-surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-full)', color: 'var(--text-secondary)', maxWidth: 110 }}
+              >
+                {ticket.assigned_agent.full_name.split(' ')[0]}
+              </span>
+            )
           )}
         </div>
         <span style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>

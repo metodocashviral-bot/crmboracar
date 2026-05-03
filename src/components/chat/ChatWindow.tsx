@@ -19,7 +19,7 @@ interface ChatWindowProps {
 
 export default function ChatWindow({ ticket, onUpdate }: ChatWindowProps) {
   const { profile, whatsappStatus } = useAppStore()
-  const { messages, loading, addMessage } = useMessages(ticket.id)
+  const { messages, loading, addMessage, removeMessage } = useMessages(ticket.id)
   const bottomRef = useRef<HTMLDivElement>(null)
   const initializedRef = useRef(false)
 
@@ -53,6 +53,13 @@ export default function ChatWindow({ ticket, onUpdate }: ChatWindowProps) {
 
   async function handleSend(content: string) {
     if (!profile) return
+    const optId = `opt-${Date.now()}`
+    addMessage({
+      id: optId, ticket_id: ticket.id, contact_id: ticket.contact_id,
+      sender_type: 'agent', agent_id: profile.id, content,
+      is_read: true, created_at: new Date().toISOString(),
+      agent: { id: profile.id, full_name: profile.full_name },
+    } as Message)
     try {
       const res = await fetch('/api/send-message', {
         method: 'POST',
@@ -61,9 +68,38 @@ export default function ChatWindow({ ticket, onUpdate }: ChatWindowProps) {
       })
       if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Erro ao enviar') }
       const { message } = await res.json()
+      removeMessage(optId)
       if (message) addMessage(message)
     } catch (err: any) {
+      removeMessage(optId)
       toast.error(err.message || 'Erro ao enviar mensagem')
+    }
+  }
+
+  async function handleSendMedia(file: File, caption: string, mediaType: string) {
+    if (!profile) return
+    const optId = `opt-${Date.now()}`
+    addMessage({
+      id: optId, ticket_id: ticket.id, contact_id: ticket.contact_id,
+      sender_type: 'agent', agent_id: profile.id, content: caption || file.name,
+      media_type: mediaType, is_read: true, created_at: new Date().toISOString(),
+      agent: { id: profile.id, full_name: profile.full_name },
+    } as Message)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('ticketId', ticket.id)
+      formData.append('agentId', profile.id)
+      formData.append('caption', caption)
+      formData.append('mediaType', mediaType)
+      const res = await fetch('/api/send-media', { method: 'POST', body: formData })
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Erro ao enviar mídia') }
+      const { message } = await res.json()
+      removeMessage(optId)
+      if (message) addMessage(message)
+    } catch (err: any) {
+      removeMessage(optId)
+      toast.error(err.message || 'Erro ao enviar mídia')
     }
   }
 
@@ -78,7 +114,7 @@ export default function ChatWindow({ ticket, onUpdate }: ChatWindowProps) {
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto" style={{ padding: '16px 20px', background: 'var(--bg-base)' }}>
+      <div className="flex-1 overflow-y-auto" style={{ padding: '16px 20px', background: '#efeae2' }}>
         {loading ? (
           <div className="flex justify-center pt-8"><Spinner /></div>
         ) : (
@@ -102,7 +138,7 @@ export default function ChatWindow({ ticket, onUpdate }: ChatWindowProps) {
           </>
         )}
       </div>
-      <MessageInput onSend={handleSend} disabled={whatsappStatus !== 'connected'} />
+      <MessageInput onSend={handleSend} onSendMedia={handleSendMedia} disabled={whatsappStatus !== 'connected'} />
     </div>
   )
 }

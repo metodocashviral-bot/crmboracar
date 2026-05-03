@@ -82,6 +82,30 @@ export async function fetchInstance(cfg: EvolutionConfig) {
   return evolutionFetch(`/instance/fetchInstances?instanceName=${cfg.instance}`, cfg)
 }
 
+export async function sendMediaMessage(
+  phone: string,
+  media: { type: 'image' | 'video' | 'document'; url: string; filename?: string; caption?: string },
+  cfg: EvolutionConfig
+) {
+  return evolutionFetch(`/message/sendMedia/${cfg.instance}`, cfg, {
+    method: 'POST',
+    body: JSON.stringify({
+      number: phone,
+      mediatype: media.type,
+      media: media.url,
+      fileName: media.filename || '',
+      caption: media.caption || '',
+    }),
+  })
+}
+
+export async function sendAudioMessage(phone: string, audioUrl: string, cfg: EvolutionConfig) {
+  return evolutionFetch(`/message/sendWhatsAppAudio/${cfg.instance}`, cfg, {
+    method: 'POST',
+    body: JSON.stringify({ number: phone, audio: audioUrl, encoding: true }),
+  })
+}
+
 export async function fetchChats(cfg: EvolutionConfig) {
   return evolutionFetch(`/chat/findChats/${cfg.instance}`, cfg, { method: 'POST', body: JSON.stringify({}) })
 }

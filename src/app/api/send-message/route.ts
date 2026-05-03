@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { ticketId, content, agentId } = await req.json()
+  const { ticketId, content, agentId, noPrefix } = await req.json()
   if (!ticketId || !content) {
     return NextResponse.json({ error: 'ticketId and content required' }, { status: 400 })
   }
@@ -19,35 +19,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Evolution API não configurada no servidor' }, { status: 500 })
   }
 
-  const { data: ticket } = await getSupabaseAdmin()
-    .from('tickets')
-    .select('*, contact:contacts(*)')
-    .eq('id', ticketId)
-    .single()
+  const admin = getSupabaseAdmin()
+  const [{ data: ticket }, { data: settings }, { data: agentProfile }] = await Promise.all([
+    admin.from('tickets').select('*, contact:contacts(*)').eq('id', ticketId).single(),
+    admin.from('company_settings').select('evolution_instance').limit(1).single(),
+    admin.from('profiles').select('full_name').eq('id', agentId || user.id).single(),
+  ])
 
   if (!ticket) return NextResponse.json({ error: 'Ticket not found' }, { status: 404 })
-
-  const { data: settings } = await getSupabaseAdmin()
-    .from('company_settings')
-    .select('evolution_instance')
-    .limit(1)
-    .single()
-
-  if (!settings?.evolution_instance) {
-    return NextResponse.json({ error: 'WhatsApp não conectado' }, { status: 400 })
-  }
+  if (!settings?.evolution_instance) return NextResponse.json({ error: 'WhatsApp não conectado' }, { status: 400 })
 
   const cfg = { url: evolutionUrl, apiKey: evolutionKey, instance: settings.evolution_instance }
-
-  // Fetch agent name to prepend in WhatsApp message
-  const { data: agentProfile } = await getSupabaseAdmin()
-    .from('profiles')
-    .select('full_name')
-    .eq('id', agentId || user.id)
-    .single()
-
   const agentName = agentProfile?.full_name || ''
-  const whatsappText = agentName ? `*${agentName}:*\n${content}` : content
+  const whatsappText = (noPrefix || !agentName) ? content : `*${agentName}:*\n${content}`
 
   try {
     await sendTextMessage(ticket.contact.phone, whatsappText, cfg)
