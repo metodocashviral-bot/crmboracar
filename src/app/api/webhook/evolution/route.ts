@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
       // Find or create open ticket
       const { data: openTicket } = await getSupabaseAdmin()
         .from('tickets')
-        .select('id, unread_count')
+        .select('id, unread_count, assigned_agent_id')
         .eq('contact_id', contactId)
         .neq('status', 'finished')
         .order('created_at', { ascending: false })
@@ -86,10 +86,12 @@ export async function POST(req: NextRequest) {
         .maybeSingle()
 
       let ticketId: string
+      let assignedAgentId: string | null = null
       const now = new Date().toISOString()
 
       if (openTicket) {
         ticketId = openTicket.id
+        assignedAgentId = openTicket.assigned_agent_id ?? null
         await getSupabaseAdmin()
           .from('tickets')
           .update({ unread_count: (openTicket.unread_count || 0) + 1, last_message_at: now })
@@ -111,6 +113,18 @@ export async function POST(req: NextRequest) {
         content,
         whatsapp_message_id: whatsappMessageId || null,
       })
+
+      // Notify assigned agent about new message
+      if (assignedAgentId) {
+        const contactName = pushName || phone
+        await getSupabaseAdmin().from('notifications').insert({
+          user_id: assignedAgentId,
+          type: 'new_message',
+          title: `Nova mensagem de ${contactName}`,
+          body: content.length > 80 ? content.slice(0, 80) + '...' : content,
+          ticket_id: ticketId,
+        })
+      }
     }
 
     return NextResponse.json({ received: true })

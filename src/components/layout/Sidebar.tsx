@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { LayoutDashboard, Users, Settings, LogOut, MessageSquare, ChevronRight } from 'lucide-react'
 import Avatar from '@/components/ui/Avatar'
+import NotificationBell from '@/components/ui/NotificationBell'
 import { useAppStore } from '@/stores/appStore'
 import { createClient } from '@/lib/supabase/client'
 
@@ -165,6 +166,10 @@ export default function Sidebar() {
             </Link>
           )
         })()}
+
+        <div style={{ marginTop: 'auto', paddingTop: 4 }}>
+          <NotificationBell collapsed={collapsed} />
+        </div>
       </nav>
 
       {/* User footer */}

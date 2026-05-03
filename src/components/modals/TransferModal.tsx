@@ -61,6 +61,15 @@ export default function TransferModal({ open, onClose, ticketId, currentAgentId,
       content: transferMsg,
     })
 
+    // In-app notification for the receiving agent
+    await supabase.from('notifications').insert({
+      user_id: selected,
+      type: 'transfer',
+      title: `${profile?.full_name || 'Atendente'} transferiu um atendimento para você`,
+      body: transferMsg,
+      ticket_id: ticketId,
+    })
+
     // Send WhatsApp message to contact (names in bold)
     const transferMsgWpp = `*${profile?.full_name || 'Atendente'}* transferiu o atendimento para *${targetAgent?.full_name || 'outro atendente'}*`
     fetch('/api/send-message', {
