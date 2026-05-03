@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { UserPlus, UserCheck, UserX, Pencil, Check, X } from 'lucide-react'
+import { UserPlus, UserCheck, UserX, Pencil, Check, X, ShieldCheck, ShieldOff } from 'lucide-react'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
@@ -33,6 +33,19 @@ export default function AgentManager() {
     })
     if (res.ok) {
       toast.success(agent.is_active ? 'Atendente desativado' : 'Atendente ativado')
+      fetchAgents()
+    }
+  }
+
+  async function toggleRole(agent: Profile) {
+    const newRole = agent.role === 'admin' ? 'agent' : 'admin'
+    const res = await fetch(`/api/agents/${agent.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: newRole }),
+    })
+    if (res.ok) {
+      toast.success(newRole === 'admin' ? 'Promovido a Admin' : 'Rebaixado a Atendente')
       fetchAgents()
     }
   }
@@ -139,17 +152,24 @@ export default function AgentManager() {
                 >
                   <Pencil size={14} />
                 </button>
-                {agent.role !== 'admin' && (
-                  <button
-                    onClick={() => toggleActive(agent)}
-                    style={{ padding: 6, borderRadius: 'var(--radius-sm)', color: 'var(--text-muted)', cursor: 'pointer', transition: 'var(--transition-fast)' }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-primary)'; (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-surface-2)' }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-muted)'; (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
-                    title={agent.is_active ? 'Desativar' : 'Ativar'}
-                  >
-                    {agent.is_active ? <UserX size={14} /> : <UserCheck size={14} />}
-                  </button>
-                )}
+                <button
+                  onClick={() => toggleRole(agent)}
+                  style={{ padding: 6, borderRadius: 'var(--radius-sm)', color: agent.role === 'admin' ? '#8b5cf6' : 'var(--text-muted)', cursor: 'pointer', transition: 'var(--transition-fast)' }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#8b5cf6'; (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-surface-2)' }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = agent.role === 'admin' ? '#8b5cf6' : 'var(--text-muted)'; (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
+                  title={agent.role === 'admin' ? 'Remover Admin' : 'Conceder Admin'}
+                >
+                  {agent.role === 'admin' ? <ShieldOff size={14} /> : <ShieldCheck size={14} />}
+                </button>
+                <button
+                  onClick={() => toggleActive(agent)}
+                  style={{ padding: 6, borderRadius: 'var(--radius-sm)', color: 'var(--text-muted)', cursor: 'pointer', transition: 'var(--transition-fast)' }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-primary)'; (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-surface-2)' }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-muted)'; (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
+                  title={agent.is_active ? 'Desativar' : 'Ativar'}
+                >
+                  {agent.is_active ? <UserX size={14} /> : <UserCheck size={14} />}
+                </button>
               </div>
             </div>
           ))}
