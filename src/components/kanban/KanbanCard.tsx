@@ -15,10 +15,10 @@ interface KanbanCardProps {
   isActive?: boolean
   isWaiting?: boolean
   onStartAttendance?: (ticket: Ticket) => void
-  accent: string
+  accent?: string
 }
 
-export default function KanbanCard({ ticket, isActive, isWaiting, onStartAttendance, accent }: KanbanCardProps) {
+export default function KanbanCard({ ticket, isActive, isWaiting, onStartAttendance, accent = '#21d162' }: KanbanCardProps) {
   const router = useRouter()
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: ticket.id,
