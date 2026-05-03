@@ -34,7 +34,7 @@ export function useRealtimeMessages(ticketId: string, onNewMessage: (payload: an
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages', filter: `ticket_id=eq.${ticketId}` },
-        (payload) => onNewMessageRef.current(payload)
+        (payload: Record<string, unknown>) => onNewMessageRef.current(payload)
       )
       .subscribe()
 
