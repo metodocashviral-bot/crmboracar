@@ -107,15 +107,26 @@ export async function sendAudioMessage(phone: string, audioUrl: string, cfg: Evo
 }
 
 export async function fetchProfilePicture(phone: string, cfg: EvolutionConfig): Promise<string | null> {
-  try {
-    const res = await evolutionFetch(`/chat/fetchProfilePictureUrl/${cfg.instance}`, cfg, {
-      method: 'POST',
-      body: JSON.stringify({ number: phone }),
-    })
-    return res?.profilePictureUrl || res?.url || null
-  } catch {
-    return null
+  // Try multiple endpoint variants used across Evolution API versions
+  const endpoints = [
+    { path: `/chat/fetchProfilePictureUrl/${cfg.instance}`, method: 'POST', body: JSON.stringify({ number: phone }) },
+    { path: `/misc/profilePicture/${cfg.instance}?number=${phone}`, method: 'GET', body: undefined },
+    { path: `/contact/profilePicture/${cfg.instance}?number=${phone}`, method: 'GET', body: undefined },
+  ]
+  for (const ep of endpoints) {
+    try {
+      const res = await fetch(`${cfg.url}${ep.path}`, {
+        method: ep.method,
+        headers: { 'Content-Type': 'application/json', apikey: cfg.apiKey },
+        ...(ep.body ? { body: ep.body } : {}),
+      })
+      if (!res.ok) continue
+      const data = await res.json()
+      const url = data?.profilePictureUrl || data?.url || data?.picture || data?.wuid?.profilePictureUrl || null
+      if (url && typeof url === 'string' && url.startsWith('http')) return url
+    } catch {}
   }
+  return null
 }
 
 export async function fetchChats(cfg: EvolutionConfig) {

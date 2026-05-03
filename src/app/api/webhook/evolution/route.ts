@@ -63,21 +63,32 @@ export async function POST(req: NextRequest) {
         .eq('phone', phone)
         .maybeSingle()
 
-      if (existing) {
-        contactId = existing.id
-        if (pushName) {
-          await getSupabaseAdmin().from('contacts').update({ name: pushName }).eq('id', contactId).is('name', null)
-        }
-      } else {
-        // Fetch profile picture from WhatsApp for new contacts
-        let profilePicUrl: string | null = null
+      // Fetch profile picture (fire-and-forget, don't block message processing)
+      const getProfilePic = async (): Promise<string | null> => {
         try {
           const { data: settings } = await getSupabaseAdmin().from('company_settings').select('evolution_instance').limit(1).single()
           if (settings?.evolution_instance && evolutionUrl && evolutionKey) {
-            profilePicUrl = await fetchProfilePicture(phone, { url: evolutionUrl, apiKey: evolutionKey, instance: settings.evolution_instance })
+            return await fetchProfilePicture(phone, { url: evolutionUrl, apiKey: evolutionKey, instance: settings.evolution_instance })
           }
         } catch {}
+        return null
+      }
 
+      if (existing) {
+        contactId = existing.id
+        const updates: Record<string, string> = {}
+        if (pushName) updates.name = pushName
+        // Update profile pic if not set
+        const { data: existingFull } = await getSupabaseAdmin().from('contacts').select('profile_pic_url, name').eq('id', contactId).single()
+        if (!existingFull?.profile_pic_url) {
+          const pic = await getProfilePic()
+          if (pic) updates.profile_pic_url = pic
+        }
+        if (Object.keys(updates).length > 0) {
+          await getSupabaseAdmin().from('contacts').update(updates).eq('id', contactId)
+        }
+      } else {
+        const profilePicUrl = await getProfilePic()
         const { data: newContact } = await getSupabaseAdmin()
           .from('contacts')
           .insert({ phone, name: pushName || null, profile_pic_url: profilePicUrl })

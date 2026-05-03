@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { QrCode, Wifi, WifiOff, Unplug, Link2 } from 'lucide-react'
+import { QrCode, Wifi, WifiOff, Unplug, Link2, UserCheck } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Spinner from '@/components/ui/Spinner'
 import { useWhatsAppStatus } from '@/hooks/useWhatsAppStatus'
@@ -13,6 +13,7 @@ export default function WhatsAppConnect() {
   const { whatsappStatus, settings, setSettings } = useAppStore()
   const { qrCode, connectedNumber, connect, disconnect } = useWhatsAppStatus()
   const [webhookSyncing, setWebhookSyncing] = useState(false)
+  const [picSyncing, setPicSyncing] = useState(false)
 
   // Auto-sync webhook URL whenever the component loads in connected state
   useEffect(() => {
@@ -35,7 +36,21 @@ export default function WhatsAppConnect() {
     }
   }
 
-async function handleConnect() {
+async function handleSyncPics() {
+    setPicSyncing(true)
+    try {
+      const res = await fetch('/api/whatsapp/sync-profile-pics', { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error)
+      toast.success(`${json.updated} foto${json.updated !== 1 ? 's' : ''} atualizada${json.updated !== 1 ? 's' : ''} de ${json.total} contatos`)
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao sincronizar fotos')
+    } finally {
+      setPicSyncing(false)
+    }
+  }
+
+  async function handleConnect() {
     try {
       await connect()
     } catch (err: any) {
@@ -127,6 +142,10 @@ async function handleConnect() {
             <Button variant="secondary" onClick={handleSyncWebhook} disabled={webhookSyncing} style={{ width: '100%' }}>
               <Link2 size={13} className="mr-1.5" />
               {webhookSyncing ? 'Atualizando...' : 'Atualizar Webhook'}
+            </Button>
+            <Button variant="secondary" onClick={handleSyncPics} disabled={picSyncing} style={{ width: '100%' }}>
+              <UserCheck size={13} className="mr-1.5" />
+              {picSyncing ? 'Sincronizando...' : 'Sincronizar Fotos'}
             </Button>
 <Button variant="danger" onClick={handleDisconnect} style={{ width: '100%' }}>
               <Unplug size={14} className="mr-2" />
