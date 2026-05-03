@@ -22,6 +22,7 @@ export default function TransferModal({ open, onClose, ticketId, currentAgentId,
   const [agents, setAgents] = useState<Profile[]>([])
   const [selected, setSelected] = useState('')
   const [reason, setReason] = useState('')
+  const [notify, setNotify] = useState(true)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -70,13 +71,14 @@ export default function TransferModal({ open, onClose, ticketId, currentAgentId,
       ticket_id: ticketId,
     })
 
-    // Send WhatsApp message to contact (names in bold)
-    const transferMsgWpp = `*${profile?.full_name || 'Atendente'}* transferiu o atendimento para *${targetAgent?.full_name || 'outro atendente'}*`
-    fetch('/api/send-message', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ticketId, content: transferMsgWpp, agentId: profile?.id, noPrefix: true }),
-    }).catch(() => {})
+    if (notify) {
+      const transferMsgWpp = `*${profile?.full_name || 'Atendente'}* transferiu o atendimento para *${targetAgent?.full_name || 'outro atendente'}*`
+      fetch('/api/send-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticketId, content: transferMsgWpp, agentId: profile?.id, noPrefix: true }),
+      }).catch(() => {})
+    }
 
     toast.success('Atendimento transferido')
     setLoading(false)
@@ -122,6 +124,40 @@ export default function TransferModal({ open, onClose, ticketId, currentAgentId,
             className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
           />
         </div>
+
+        {/* Notify toggle */}
+        <button
+          onClick={() => setNotify((v) => !v)}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '10px 12px', borderRadius: 10,
+            background: notify ? 'var(--brand-primary-light)' : 'var(--bg-surface-2)',
+            border: `1px solid ${notify ? 'var(--brand-primary)' : 'var(--border)'}`,
+            cursor: 'pointer', transition: 'var(--transition-fast)',
+          }}
+        >
+          <div style={{ textAlign: 'left' }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Notificar cliente</p>
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
+              {notify ? 'Envia mensagem de transferência via WhatsApp' : 'Transfere sem avisar o cliente'}
+            </p>
+          </div>
+          {/* Toggle pill */}
+          <div style={{
+            width: 40, height: 22, borderRadius: 99, flexShrink: 0,
+            background: notify ? 'var(--brand-primary)' : '#d1d5db',
+            position: 'relative', transition: 'background 0.2s',
+          }}>
+            <div style={{
+              position: 'absolute', top: 3,
+              left: notify ? 21 : 3,
+              width: 16, height: 16, borderRadius: '50%',
+              background: 'white',
+              transition: 'left 0.2s',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+            }} />
+          </div>
+        </button>
 
         <div className="flex gap-2">
           <Button variant="secondary" className="flex-1" onClick={onClose}>Cancelar</Button>
