@@ -8,6 +8,7 @@ import { useAppStore } from '@/stores/appStore'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 
+
 const PRESET_COLORS = [
   '#21d162', '#075E54', '#128C7E', '#34B7F1',
   '#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#EF4444',
@@ -45,31 +46,23 @@ export default function CompanySettings() {
     if (!file || !settings) return
 
     setUploading(true)
-    const supabase = createClient()
-    const path = `logos/${settings.id}-${Date.now()}.${file.name.split('.').pop()}`
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('settingsId', settings.id)
 
-    const { error: uploadError } = await supabase.storage.from('logos').upload(path, file, { upsert: true })
-    if (uploadError) {
-      toast.error('Erro ao fazer upload da logo')
-      setUploading(false)
-      return
-    }
+      const res = await fetch('/api/upload-logo', { method: 'POST', body: formData })
+      const json = await res.json()
 
-    const { data: urlData } = supabase.storage.from('logos').getPublicUrl(path)
-    const logoUrl = urlData.publicUrl
+      if (!res.ok) throw new Error(json.error || 'Erro no upload')
 
-    const { data, error } = await supabase
-      .from('company_settings')
-      .update({ logo_url: logoUrl })
-      .eq('id', settings.id)
-      .select()
-      .single()
-
-    if (!error && data) {
-      setSettings(data)
+      setSettings(json.settings)
       toast.success('Logo atualizada')
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao fazer upload da logo')
+    } finally {
+      setUploading(false)
     }
-    setUploading(false)
   }
 
   return (

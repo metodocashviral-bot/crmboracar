@@ -1,6 +1,7 @@
 'use client'
 
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import type { Profile, CompanySettings, WhatsAppStatus } from '@/types'
 
 interface AppStore {
@@ -20,19 +21,27 @@ interface AppStore {
   setActiveTicketId: (id: string | null) => void
 }
 
-export const useAppStore = create<AppStore>((set) => ({
-  profile: null,
-  setProfile: (profile) => set({ profile }),
+export const useAppStore = create<AppStore>()(
+  persist(
+    (set) => ({
+      profile: null,
+      setProfile: (profile) => set({ profile }),
 
-  settings: null,
-  setSettings: (settings) => set({ settings }),
+      settings: null,
+      setSettings: (settings) => set({ settings }),
 
-  whatsappStatus: 'disconnected',
-  setWhatsappStatus: (whatsappStatus) => set({ whatsappStatus }),
+      whatsappStatus: 'disconnected',
+      setWhatsappStatus: (whatsappStatus) => set({ whatsappStatus }),
 
-  sidebarOpen: true,
-  toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
+      sidebarOpen: true,
+      toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
 
-  activeTicketId: null,
-  setActiveTicketId: (activeTicketId) => set({ activeTicketId }),
-}))
+      activeTicketId: null,
+      setActiveTicketId: (activeTicketId) => set({ activeTicketId }),
+    }),
+    {
+      name: 'crm-boracar-store',
+      partialize: (s) => ({ profile: s.profile, settings: s.settings }),
+    }
+  )
+)

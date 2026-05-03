@@ -12,9 +12,10 @@ export function useMessages(ticketId: string) {
     const supabase = createClient()
     const { data } = await supabase
       .from('messages')
-      .select('*, agent:profiles(*)')
+      .select('id, content, sender_type, created_at, contact_id, ticket_id, agent_id, whatsapp_message_id, agent:profiles(id, full_name)')
       .eq('ticket_id', ticketId)
       .order('created_at', { ascending: true })
+      .limit(200)
 
     if (data) setMessages(data as Message[])
     setLoading(false)
