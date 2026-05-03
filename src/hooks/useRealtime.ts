@@ -13,7 +13,7 @@ export function useRealtimeTickets(onUpdate: () => void) {
       .channel('realtime-tickets-v2')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, () => onUpdateRef.current())
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, () => onUpdateRef.current())
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         if (status === 'CHANNEL_ERROR') {
           setTimeout(() => supabase.removeChannel(channel), 1000)
         }
