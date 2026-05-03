@@ -1,6 +1,7 @@
 'use client'
 
-import { QrCode, Wifi, WifiOff, Unplug } from 'lucide-react'
+import { useState } from 'react'
+import { QrCode, Wifi, WifiOff, Unplug, RefreshCw } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Spinner from '@/components/ui/Spinner'
 import { useWhatsAppStatus } from '@/hooks/useWhatsAppStatus'
@@ -11,6 +12,21 @@ import toast from 'react-hot-toast'
 export default function WhatsAppConnect() {
   const { whatsappStatus, settings, setSettings } = useAppStore()
   const { qrCode, connectedNumber, connect, disconnect } = useWhatsAppStatus()
+  const [syncing, setSyncing] = useState(false)
+
+  async function handleSync() {
+    setSyncing(true)
+    try {
+      const res = await fetch('/api/whatsapp/import-chats', { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error)
+      toast.success(`${json.imported} conversa${json.imported !== 1 ? 's' : ''} importada${json.imported !== 1 ? 's' : ''}`)
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao sincronizar')
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   async function handleConnect() {
     try {
@@ -99,10 +115,16 @@ export default function WhatsAppConnect() {
               </p>
             )}
           </div>
-          <Button variant="danger" onClick={handleDisconnect}>
-            <Unplug size={14} className="mr-2" />
-            Desconectar
-          </Button>
+          <div className="flex items-center" style={{ gap: 8 }}>
+            <Button variant="secondary" onClick={handleSync} disabled={syncing}>
+              <RefreshCw size={13} className="mr-1.5" style={{ animation: syncing ? 'spin 1s linear infinite' : 'none' }} />
+              {syncing ? 'Importando...' : 'Importar Conversas'}
+            </Button>
+            <Button variant="danger" onClick={handleDisconnect}>
+              <Unplug size={14} className="mr-2" />
+              Desconectar
+            </Button>
+          </div>
         </div>
       )}
     </div>

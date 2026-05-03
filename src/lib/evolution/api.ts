@@ -77,3 +77,14 @@ export async function deleteInstance(cfg: EvolutionConfig) {
 export async function fetchInstance(cfg: EvolutionConfig) {
   return evolutionFetch(`/instance/fetchInstances?instanceName=${cfg.instance}`, cfg)
 }
+
+export async function fetchChats(cfg: EvolutionConfig) {
+  return evolutionFetch(`/chat/findChats/${cfg.instance}`, cfg, { method: 'POST', body: JSON.stringify({}) })
+}
+
+export async function fetchChatMessages(cfg: EvolutionConfig, remoteJid: string, limit = 30) {
+  return evolutionFetch(`/chat/findMessages/${cfg.instance}`, cfg, {
+    method: 'POST',
+    body: JSON.stringify({ where: { key: { remoteJid } }, limit }),
+  })
+}

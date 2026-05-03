@@ -39,8 +39,18 @@ export async function POST(req: NextRequest) {
 
   const cfg = { url: evolutionUrl, apiKey: evolutionKey, instance: settings.evolution_instance }
 
+  // Fetch agent name to prepend in WhatsApp message
+  const { data: agentProfile } = await getSupabaseAdmin()
+    .from('profiles')
+    .select('full_name')
+    .eq('id', agentId || user.id)
+    .single()
+
+  const agentName = agentProfile?.full_name || ''
+  const whatsappText = agentName ? `*${agentName}:*\n${content}` : content
+
   try {
-    await sendTextMessage(ticket.contact.phone, content, cfg)
+    await sendTextMessage(ticket.contact.phone, whatsappText, cfg)
   } catch (err: any) {
     return NextResponse.json({ error: `Evolution API: ${err.message}` }, { status: 500 })
   }
