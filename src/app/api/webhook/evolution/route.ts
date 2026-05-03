@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase/admin'
+import { fetchProfilePicture } from '@/lib/evolution/api'
 import { phoneFromJid } from '@/lib/utils'
 
 export async function POST(req: NextRequest) {
@@ -16,6 +17,9 @@ export async function POST(req: NextRequest) {
     if (!isMessageEvent) {
       return NextResponse.json({ received: true })
     }
+
+    const evolutionUrl = process.env.EVOLUTION_API_URL
+    const evolutionKey = process.env.EVOLUTION_API_KEY
 
     // Handle both array and object data formats
     const rawData = body.data
@@ -65,9 +69,18 @@ export async function POST(req: NextRequest) {
           await getSupabaseAdmin().from('contacts').update({ name: pushName }).eq('id', contactId).is('name', null)
         }
       } else {
+        // Fetch profile picture from WhatsApp for new contacts
+        let profilePicUrl: string | null = null
+        try {
+          const { data: settings } = await getSupabaseAdmin().from('company_settings').select('evolution_instance').limit(1).single()
+          if (settings?.evolution_instance && evolutionUrl && evolutionKey) {
+            profilePicUrl = await fetchProfilePicture(phone, { url: evolutionUrl, apiKey: evolutionKey, instance: settings.evolution_instance })
+          }
+        } catch {}
+
         const { data: newContact } = await getSupabaseAdmin()
           .from('contacts')
-          .insert({ phone, name: pushName || null })
+          .insert({ phone, name: pushName || null, profile_pic_url: profilePicUrl })
           .select('id')
           .single()
         contactId = newContact?.id ?? null

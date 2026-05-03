@@ -21,40 +21,72 @@ export default function KanbanColumn({ id, title, tickets, accent, counterStyle,
 
   return (
     <div className="flex flex-col" style={{ minWidth: 0, minHeight: 0 }}>
-      <div
-        style={{
-          background: 'var(--bg-surface-2)',
-          borderRadius: 'var(--radius-lg)',
-          borderTop: `3px solid ${accent}`,
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          minHeight: 0,
-        }}
-      >
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        minHeight: 0,
+        borderRadius: 'var(--radius-xl)',
+        background: 'var(--bg-surface-2)',
+        border: '1px solid var(--border)',
+        overflow: 'hidden',
+      }}>
         {/* Header */}
-        <div className="flex items-center justify-between flex-shrink-0" style={{ padding: '12px 12px 8px 12px' }}>
-          <div className="flex items-center gap-2">
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: accent, flexShrink: 0 }} />
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{title}</span>
+        <div style={{
+          padding: '0 12px',
+          height: 48,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          flexShrink: 0,
+          borderBottom: `2px solid ${accent}`,
+          background: 'var(--bg-surface)',
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            flex: 1,
+            minWidth: 0,
+          }}>
+            {/* Count badge */}
+            <span style={{
+              minWidth: 26, height: 22,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              borderRadius: 'var(--radius-full)',
+              fontSize: 12, fontWeight: 800,
+              padding: '0 6px',
+              flexShrink: 0,
+              ...counterStyle,
+            }}>
+              {tickets.length}
+            </span>
+            <span style={{
+              fontSize: 13, fontWeight: 700,
+              color: 'var(--text-primary)',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
+              {title}
+            </span>
           </div>
-          <span className="font-bold" style={{ fontSize: 11, padding: '2px 8px', borderRadius: 'var(--radius-full)', ...counterStyle }}>
-            {tickets.length}
-          </span>
+          {/* Accent bar indicator */}
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: accent, flexShrink: 0 }} />
         </div>
 
-        {/* Scrollable drop area */}
+        {/* Scrollable list */}
         <div
           ref={setNodeRef}
           style={{
             flex: 1,
             overflowY: 'auto',
-            padding: '4px 8px 8px 8px',
-            borderRadius: '0 0 var(--radius-lg) var(--radius-lg)',
-            border: isOver ? '2px dashed var(--brand-primary)' : '2px solid transparent',
-            background: isOver ? 'var(--brand-glow)' : 'transparent',
+            padding: '6px 8px 8px',
+            border: isOver ? `2px dashed ${accent}` : '2px solid transparent',
+            background: isOver ? `${accent}10` : 'transparent',
             transition: 'var(--transition-fast)',
             minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
           }}
         >
           <SortableContext items={tickets.map((t) => t.id)} strategy={verticalListSortingStrategy}>
@@ -65,12 +97,13 @@ export default function KanbanColumn({ id, title, tickets, accent, counterStyle,
                 isActive={ticket.id === activeTicketId}
                 isWaiting={isWaiting}
                 onStartAttendance={onStartAttendance}
+                accent={accent}
               />
             ))}
           </SortableContext>
           {tickets.length === 0 && (
-            <div className="flex items-center justify-center" style={{ height: 80, fontSize: 12, color: 'var(--text-muted)' }}>
-              {isWaiting ? 'Nenhuma mensagem nova' : 'Nenhum atendimento'}
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: 'var(--text-muted)', padding: '24px 0' }}>
+              {isWaiting ? 'Nenhuma nova mensagem' : 'Nenhum atendimento'}
             </div>
           )}
         </div>
