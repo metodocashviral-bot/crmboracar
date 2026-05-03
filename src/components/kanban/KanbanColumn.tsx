@@ -12,14 +12,15 @@ interface KanbanColumnProps {
   accent: string
   counterStyle: React.CSSProperties
   activeTicketId?: string | null
+  isWaiting?: boolean
+  onStartAttendance?: (ticket: Ticket) => void
 }
 
-export default function KanbanColumn({ id, title, tickets, accent, counterStyle, activeTicketId }: KanbanColumnProps) {
+export default function KanbanColumn({ id, title, tickets, accent, counterStyle, activeTicketId, isWaiting, onStartAttendance }: KanbanColumnProps) {
   const { isOver, setNodeRef } = useDroppable({ id })
 
   return (
     <div className="flex flex-col" style={{ minWidth: 0 }}>
-      {/* Column container */}
       <div
         style={{
           background: 'var(--bg-surface-2)',
@@ -61,12 +62,18 @@ export default function KanbanColumn({ id, title, tickets, accent, counterStyle,
         >
           <SortableContext items={tickets.map((t) => t.id)} strategy={verticalListSortingStrategy}>
             {tickets.map((ticket) => (
-              <KanbanCard key={ticket.id} ticket={ticket} isActive={ticket.id === activeTicketId} />
+              <KanbanCard
+                key={ticket.id}
+                ticket={ticket}
+                isActive={ticket.id === activeTicketId}
+                isWaiting={isWaiting}
+                onStartAttendance={onStartAttendance}
+              />
             ))}
           </SortableContext>
           {tickets.length === 0 && (
             <div className="flex items-center justify-center" style={{ height: 80, fontSize: 12, color: 'var(--text-muted)' }}>
-              Nenhum atendimento
+              {isWaiting ? 'Nenhuma mensagem nova' : 'Nenhum atendimento'}
             </div>
           )}
         </div>

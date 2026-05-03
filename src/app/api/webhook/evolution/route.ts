@@ -6,11 +6,14 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
 
-    if (body.event !== 'MESSAGES_UPSERT') {
+    const event = body.event || body.type || ''
+    if (!['MESSAGES_UPSERT', 'messages.upsert'].includes(event)) {
       return NextResponse.json({ received: true })
     }
 
-    const data = body.data
+    // Evolution API v1 wraps in body.data, v2 may send array directly
+    const rawData = body.data || body
+    const data = Array.isArray(rawData) ? rawData[0] : rawData
     if (!data || data.key?.fromMe) {
       return NextResponse.json({ received: true })
     }
@@ -58,7 +61,7 @@ export async function POST(req: NextRequest) {
       .neq('status', 'finished')
       .order('created_at', { ascending: false })
       .limit(1)
-      .single()
+      .maybeSingle()
 
     let ticketId: string
     if (openTicket) {

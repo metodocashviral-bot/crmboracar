@@ -17,9 +17,8 @@ export function useTickets(agentFilter?: string, search?: string) {
         contact:contacts(id, name, phone, profile_pic_url),
         assigned_agent:profiles(id, full_name)
       `)
-      .neq('status', 'finished')
       .order('last_message_at', { ascending: false })
-      .limit(100)
+      .limit(150)
 
     if (agentFilter) {
       query = query.eq('assigned_agent_id', agentFilter)
