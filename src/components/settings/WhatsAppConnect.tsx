@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { QrCode, Wifi, WifiOff, Unplug, RefreshCw, Link2 } from 'lucide-react'
+import { QrCode, Wifi, WifiOff, Unplug, Link2 } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Spinner from '@/components/ui/Spinner'
 import { useWhatsAppStatus } from '@/hooks/useWhatsAppStatus'
@@ -12,7 +12,6 @@ import toast from 'react-hot-toast'
 export default function WhatsAppConnect() {
   const { whatsappStatus, settings, setSettings } = useAppStore()
   const { qrCode, connectedNumber, connect, disconnect } = useWhatsAppStatus()
-  const [syncing, setSyncing] = useState(false)
   const [webhookSyncing, setWebhookSyncing] = useState(false)
 
   // Auto-sync webhook URL whenever the component loads in connected state
@@ -36,21 +35,7 @@ export default function WhatsAppConnect() {
     }
   }
 
-  async function handleSync() {
-    setSyncing(true)
-    try {
-      const res = await fetch('/api/whatsapp/import-chats', { method: 'POST' })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json.error)
-      toast.success(`${json.imported} conversa${json.imported !== 1 ? 's' : ''} importada${json.imported !== 1 ? 's' : ''}`)
-    } catch (err: any) {
-      toast.error(err.message || 'Erro ao sincronizar')
-    } finally {
-      setSyncing(false)
-    }
-  }
-
-  async function handleConnect() {
+async function handleConnect() {
     try {
       await connect()
     } catch (err: any) {
@@ -143,11 +128,7 @@ export default function WhatsAppConnect() {
               <Link2 size={13} className="mr-1.5" />
               {webhookSyncing ? 'Atualizando...' : 'Atualizar Webhook'}
             </Button>
-            <Button variant="secondary" onClick={handleSync} disabled={syncing} style={{ width: '100%' }}>
-              <RefreshCw size={13} className="mr-1.5" style={{ animation: syncing ? 'spin 1s linear infinite' : 'none' }} />
-              {syncing ? 'Importando...' : 'Importar Conversas'}
-            </Button>
-            <Button variant="danger" onClick={handleDisconnect} style={{ width: '100%' }}>
+<Button variant="danger" onClick={handleDisconnect} style={{ width: '100%' }}>
               <Unplug size={14} className="mr-2" />
               Desconectar
             </Button>
