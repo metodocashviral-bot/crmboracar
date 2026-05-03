@@ -47,7 +47,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden" style={{ padding: 20 }}>
+      <div className="flex-1 overflow-hidden" style={{ padding: 20, minHeight: 0 }}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <Spinner size="lg" />
