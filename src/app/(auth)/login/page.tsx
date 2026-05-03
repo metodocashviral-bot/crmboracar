@@ -15,7 +15,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.from('company_settings').select('logo_url, app_name').limit(1).single().then(({ data }) => {
+    supabase.from('company_settings').select('logo_url, app_name').limit(1).single().then(({ data }: { data: { logo_url?: string; app_name?: string } | null }) => {
       if (data?.logo_url) setLogoUrl(data.logo_url)
       if (data?.app_name) setAppName(data.app_name)
     })
