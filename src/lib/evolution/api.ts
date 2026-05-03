@@ -51,6 +51,7 @@ export async function setWebhook(cfg: EvolutionConfig, webhookUrl: string) {
     method: 'POST',
     body: JSON.stringify({
       webhook: {
+        enabled: true,
         url: webhookUrl,
         byEvents: false,
         base64: false,
