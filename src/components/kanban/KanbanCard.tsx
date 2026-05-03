@@ -3,7 +3,7 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useRouter } from 'next/navigation'
-import { PlayCircle, MoreVertical, Calendar, AlertCircle } from 'lucide-react'
+import { PlayCircle, Calendar } from 'lucide-react'
 import { timeAgo, formatPhone } from '@/lib/utils'
 import Avatar from '@/components/ui/Avatar'
 import type { Ticket } from '@/types'
@@ -25,10 +25,12 @@ export default function KanbanCard({ ticket, isActive, isWaiting, onStartAttenda
     data: { ticket },
   })
 
-  const style = { transform: CSS.Transform.toString(transform), transition }
   const contactName = ticket.contact?.name || formatPhone(ticket.contact?.phone || '')
+  const phone = ticket.contact?.phone ? formatPhone(ticket.contact.phone) : ''
   const lastMsg = ticket.last_message || ''
-  const followUpPast = ticket.follow_up_date && isPast(new Date(ticket.follow_up_date))
+  const followUpDate = ticket.follow_up_date ? new Date(ticket.follow_up_date) : null
+  const followUpPast = followUpDate ? isPast(followUpDate) : false
+  const hasUnread = ticket.unread_count > 0
 
   function handleClick() {
     if (isWaiting && onStartAttendance) return
@@ -38,135 +40,158 @@ export default function KanbanCard({ ticket, isActive, isWaiting, onStartAttenda
   return (
     <div
       ref={setNodeRef}
-      style={{
-        ...style,
-        opacity: isDragging ? 0.4 : 1,
-        userSelect: 'none',
-        marginBottom: 2,
-      }}
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }}
       {...attributes}
       {...listeners}
     >
       <div
         onClick={handleClick}
         style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: 10,
-          padding: '10px 12px',
-          background: isActive ? 'var(--brand-primary-light)' : 'var(--bg-surface)',
-          borderRadius: 'var(--radius-lg)',
+          background: isActive ? '#f0fdf4' : 'white',
+          borderRadius: 14,
+          padding: '12px 14px',
+          marginBottom: 6,
           cursor: isWaiting ? 'default' : 'pointer',
-          borderLeft: isActive ? `3px solid ${accent}` : '3px solid transparent',
-          transition: 'var(--transition-fast)',
-          position: 'relative',
+          boxShadow: isActive
+            ? `0 0 0 1.5px ${accent}, 0 2px 8px rgba(0,0,0,0.06)`
+            : '0 1px 3px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04)',
+          transition: 'box-shadow 0.15s ease, transform 0.15s ease',
+          userSelect: 'none',
         }}
         onMouseEnter={(e) => {
-          if (!isActive) (e.currentTarget as HTMLDivElement).style.background = 'var(--bg-surface-2)'
+          if (!isActive && !isWaiting) {
+            (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 12px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.06)'
+            ;(e.currentTarget as HTMLDivElement).style.transform = 'translateY(-1px)'
+          }
         }}
         onMouseLeave={(e) => {
-          if (!isActive) (e.currentTarget as HTMLDivElement).style.background = 'var(--bg-surface)'
+          if (!isActive) {
+            (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.07), 0 0 0 1px rgba(0,0,0,0.04)'
+            ;(e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'
+          }
         }}
       >
-        {/* Avatar with unread badge */}
-        <div style={{ position: 'relative', flexShrink: 0 }}>
-          <Avatar
-            name={ticket.contact?.name}
-            phone={ticket.contact?.phone}
-            src={ticket.contact?.profile_pic_url}
-            size="xl"
-          />
-          {ticket.unread_count > 0 && (
-            <span style={{
-              position: 'absolute', bottom: 0, right: 0,
-              minWidth: 18, height: 18,
-              background: accent, color: 'white',
-              borderRadius: 'var(--radius-full)',
-              fontSize: 10, fontWeight: 700,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              padding: '0 4px',
-              border: '2px solid var(--bg-surface)',
-            }}>
-              {ticket.unread_count > 99 ? '99+' : ticket.unread_count}
-            </span>
-          )}
-          {isWaiting && (
-            <span style={{
-              position: 'absolute', bottom: 0, right: 0,
-              width: 14, height: 14, borderRadius: '50%',
-              background: '#f59e0b', border: '2px solid var(--bg-surface)',
-            }} />
-          )}
-        </div>
+        {/* Main row */}
+        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          {/* Avatar */}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <Avatar
+              name={ticket.contact?.name}
+              phone={ticket.contact?.phone}
+              src={ticket.contact?.profile_pic_url}
+              size="md"
+            />
+            {hasUnread && (
+              <span style={{
+                position: 'absolute', top: -3, right: -3,
+                minWidth: 16, height: 16,
+                background: accent, color: 'white',
+                borderRadius: 99, fontSize: 9, fontWeight: 700,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: '0 3px',
+                border: '1.5px solid white',
+                lineHeight: 1,
+              }}>
+                {ticket.unread_count > 99 ? '99+' : ticket.unread_count}
+              </span>
+            )}
+          </div>
 
-        {/* Content */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {/* Row 1: Name + time */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4, marginBottom: 2 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', truncate: true, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-              {contactName}
-            </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-              {ticket.priority === 'high' && <AlertCircle size={11} style={{ color: '#ef4444' }} />}
-              <span style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+          {/* Text content */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {/* Name + time */}
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 6, marginBottom: 1 }}>
+              <span style={{
+                fontSize: 13.5, fontWeight: 600,
+                color: '#111827',
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                flex: 1,
+              }}>
+                {contactName}
+              </span>
+              <span style={{ fontSize: 11, color: '#9ca3af', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
                 {timeAgo(ticket.last_message_at)}
               </span>
             </div>
+
+            {/* Phone (only if name exists and is different) */}
+            {ticket.contact?.name && phone && (
+              <p style={{ fontSize: 11, color: '#9ca3af', marginBottom: 4 }}>{phone}</p>
+            )}
+
+            {/* Message preview */}
+            {lastMsg ? (
+              <p style={{
+                fontSize: 12.5, color: '#6b7280', lineHeight: '18px',
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                marginBottom: 0,
+              }}>
+                {lastMsg}
+              </p>
+            ) : (
+              <p style={{ fontSize: 12, color: '#d1d5db', fontStyle: 'italic' }}>Sem mensagens</p>
+            )}
           </div>
+        </div>
 
-          {/* Row 2: Message preview */}
-          <p style={{
-            fontSize: 12, color: 'var(--text-secondary)', lineHeight: '17px',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            marginBottom: 6,
+        {/* Footer row — only rendered when there's something to show */}
+        {(ticket.assigned_agent || followUpDate || isWaiting) && (
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            marginTop: 10,
+            paddingTop: 8,
+            borderTop: '1px solid #f3f4f6',
           }}>
-            {lastMsg || <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Sem mensagens</span>}
-          </p>
-
-          {/* Row 3: Agent + follow_up badge */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+            {/* Left: agent or waiting label */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               {isWaiting ? (
-                <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 600 }}>Aguardando</span>
-              ) : ticket.assigned_agent ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#f59e0b' }} />
+                  <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 600 }}>Aguardando</span>
+                </div>
+              ) : ticket.assigned_agent ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                   <Avatar name={ticket.assigned_agent.full_name} size="xs" />
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 80 }}>
+                  <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 500 }}>
                     {ticket.assigned_agent.full_name.split(' ')[0]}
                   </span>
                 </div>
               ) : null}
-
-              {ticket.status === 'follow_up' && ticket.follow_up_date && (
-                <span style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 3,
-                  fontSize: 10, fontWeight: 600,
-                  padding: '2px 6px', borderRadius: 'var(--radius-full)',
-                  background: followUpPast ? '#fef2f2' : '#f5f3ff',
-                  color: followUpPast ? '#ef4444' : '#7c3aed',
-                  border: `1px solid ${followUpPast ? '#fecaca' : '#ddd6fe'}`,
-                  flexShrink: 0,
-                }}>
-                  <Calendar size={9} />
-                  {format(new Date(ticket.follow_up_date), "dd/MM HH:mm", { locale: ptBR })}
-                </span>
-              )}
             </div>
+
+            {/* Right: follow-up date */}
+            {followUpDate && (
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 3,
+                fontSize: 10.5, fontWeight: 600,
+                padding: '3px 7px', borderRadius: 99,
+                background: followUpPast ? '#fef2f2' : '#faf5ff',
+                color: followUpPast ? '#ef4444' : '#7c3aed',
+                border: `1px solid ${followUpPast ? '#fecaca' : '#e9d5ff'}`,
+              }}>
+                <Calendar size={9} />
+                {format(followUpDate, "dd/MM 'às' HH:mm", { locale: ptBR })}
+              </span>
+            )}
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Iniciar Atendimento button */}
+      {/* Iniciar Atendimento */}
       {isWaiting && onStartAttendance && (
         <button
           onClick={(e) => { e.stopPropagation(); onStartAttendance(ticket) }}
           style={{
-            width: '100%', height: 30, marginTop: 2,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+            width: '100%', height: 34, marginBottom: 6, marginTop: -2,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
             background: accent, color: 'white', border: 'none',
-            borderRadius: 'var(--radius-md)', fontSize: 12, fontWeight: 600,
-            cursor: 'pointer', transition: 'var(--transition-fast)',
+            borderRadius: '0 0 14px 14px',
+            fontSize: 12, fontWeight: 600, letterSpacing: '0.01em',
+            cursor: 'pointer',
+            transition: 'opacity 0.15s ease',
           }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.85' }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '1' }}
         >
           <PlayCircle size={13} />
           Iniciar Atendimento
