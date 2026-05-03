@@ -5,18 +5,18 @@ interface SpinnerProps {
   className?: string
 }
 
+const sizes = { sm: 14, md: 20, lg: 28 }
+
 export default function Spinner({ size = 'md', className }: SpinnerProps) {
+  const px = sizes[size]
   return (
     <div
-      className={cn(
-        'animate-spin rounded-full border-2 border-gray-200 border-t-green-500',
-        {
-          'w-4 h-4': size === 'sm',
-          'w-6 h-6': size === 'md',
-          'w-8 h-8': size === 'lg',
-        },
-        className
-      )}
+      className={cn('animate-spin rounded-full flex-shrink-0', className)}
+      style={{
+        width: px, height: px,
+        border: '2px solid var(--border)',
+        borderTopColor: 'var(--brand-primary)',
+      }}
     />
   )
 }

@@ -9,14 +9,14 @@ import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 
 const PRESET_COLORS = [
-  '#25D366', '#075E54', '#128C7E', '#34B7F1',
+  '#21d162', '#075E54', '#128C7E', '#34B7F1',
   '#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#EF4444',
 ]
 
 export default function CompanySettings() {
   const { settings, setSettings } = useAppStore()
   const [appName, setAppName] = useState(settings?.app_name || '')
-  const [primaryColor, setPrimaryColor] = useState(settings?.primary_color || '#25D366')
+  const [primaryColor, setPrimaryColor] = useState(settings?.primary_color || '#21d162')
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
 
@@ -73,24 +73,54 @@ export default function CompanySettings() {
   }
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-5 space-y-5">
-      <h3 className="font-semibold text-gray-900 dark:text-white">Configurações da Empresa</h3>
+    <div
+      style={{
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-xl)',
+        padding: 24,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 20,
+      }}
+    >
+      <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+        Configurações da Empresa
+      </p>
 
       {/* Logo */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Logo</label>
-        <div className="flex items-center gap-4">
+        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 }}>Logo</p>
+        <div className="flex items-center" style={{ gap: 16 }}>
           {settings?.logo_url ? (
-            <img src={settings.logo_url} alt="Logo" className="w-14 h-14 rounded-xl object-cover border" />
+            <img src={settings.logo_url} alt="Logo" style={{ width: 56, height: 56, borderRadius: 'var(--radius-lg)', objectFit: 'cover', border: '1px solid var(--border)' }} />
           ) : (
-            <div className="w-14 h-14 rounded-xl bg-green-500 flex items-center justify-center text-white font-bold text-xl">
+            <div style={{ width: 56, height: 56, borderRadius: 'var(--radius-lg)', background: 'var(--brand-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: 20 }}>
               {(settings?.app_name || 'C')[0]}
             </div>
           )}
-          <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 transition-colors">
-            <Upload size={14} />
+          <label
+            style={{
+              cursor: uploading ? 'not-allowed' : 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 12px',
+              fontSize: 13,
+              fontWeight: 500,
+              borderRadius: 'var(--radius-md)',
+              background: 'var(--bg-surface-2)',
+              color: 'var(--text-secondary)',
+              border: '1px solid var(--border)',
+              transition: 'var(--transition-fast)',
+              opacity: uploading ? 0.6 : 1,
+            }}
+            onMouseEnter={(e) => { if (!uploading) (e.currentTarget as HTMLLabelElement).style.background = 'var(--bg-surface-3)' }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLLabelElement).style.background = 'var(--bg-surface-2)' }}
+          >
+            <Upload size={13} />
             {uploading ? 'Enviando...' : 'Alterar logo'}
-            <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} disabled={uploading} />
+            <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogoUpload} disabled={uploading} />
           </label>
         </div>
       </div>
@@ -105,18 +135,23 @@ export default function CompanySettings() {
 
       {/* Primary Color */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 }}>
           Cor primária
-        </label>
-        <div className="flex items-center gap-2 flex-wrap">
+        </p>
+        <div className="flex items-center flex-wrap" style={{ gap: 8 }}>
           {PRESET_COLORS.map((color) => (
             <button
               key={color}
               onClick={() => setPrimaryColor(color)}
-              className="w-8 h-8 rounded-full border-2 transition-transform hover:scale-110"
               style={{
+                width: 32, height: 32,
+                borderRadius: '50%',
                 backgroundColor: color,
-                borderColor: primaryColor === color ? '#000' : 'transparent',
+                border: primaryColor === color ? '3px solid var(--text-primary)' : '2px solid transparent',
+                cursor: 'pointer',
+                outline: primaryColor === color ? '2px solid var(--bg-surface)' : 'none',
+                outlineOffset: -4,
+                transition: 'var(--transition-fast)',
               }}
               title={color}
             />
@@ -125,13 +160,13 @@ export default function CompanySettings() {
             type="color"
             value={primaryColor}
             onChange={(e) => setPrimaryColor(e.target.value)}
-            className="w-8 h-8 rounded-full cursor-pointer border-0 p-0"
+            style={{ width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', border: 'none', padding: 0 }}
             title="Cor personalizada"
           />
         </div>
       </div>
 
-      <Button onClick={handleSave} disabled={saving || !appName}>
+      <Button onClick={handleSave} disabled={saving || !appName} style={{ alignSelf: 'flex-start' }}>
         {saving ? 'Salvando...' : 'Salvar Configurações'}
       </Button>
     </div>

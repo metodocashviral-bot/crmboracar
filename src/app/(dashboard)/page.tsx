@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { Plus, Search, Filter } from 'lucide-react'
+import { Search } from 'lucide-react'
 import Header from '@/components/layout/Header'
 import KanbanBoard from '@/components/kanban/KanbanBoard'
 import { useTickets } from '@/hooks/useTickets'
@@ -9,47 +9,51 @@ import { useAppStore } from '@/stores/appStore'
 import Spinner from '@/components/ui/Spinner'
 
 export default function DashboardPage() {
-  const { profile } = useAppStore()
   const { activeTicketId } = useAppStore()
-  const [agentFilter, setAgentFilter] = useState('')
   const [search, setSearch] = useState('')
-  const { tickets, loading, refetch } = useTickets(agentFilter || undefined, search || undefined)
+  const { tickets, loading, refetch } = useTickets(undefined, search || undefined)
+  const handleRefresh = useCallback(() => { refetch() }, [refetch])
 
-  const handleRefresh = useCallback(() => {
-    refetch()
-  }, [refetch])
+  const total = tickets.length
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <Header
-        title="Atendimentos"
-        actions={
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search size={15} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Buscar contato..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 w-48"
-              />
-            </div>
-          </div>
-        }
-      />
+      <Header title="Atendimentos" subtitle={`Kanban · ${total} atendimento${total !== 1 ? 's' : ''}`} />
 
-      <div className="flex-1 overflow-hidden p-4">
+      {/* Filter bar */}
+      <div
+        className="flex items-center gap-3 flex-shrink-0"
+        style={{ height: 64, padding: '0 24px', background: 'var(--bg-base)', borderBottom: '1px solid var(--border)' }}
+      >
+        <div className="relative">
+          <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+          <input
+            type="text"
+            placeholder="Buscar contato..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              height: 36, width: 280, paddingLeft: 36, paddingRight: 12,
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-full)',
+              background: 'var(--bg-surface)',
+              color: 'var(--text-primary)',
+              fontSize: 13,
+              outline: 'none',
+            }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--brand-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--brand-glow)' }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = '' }}
+          />
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-hidden" style={{ padding: 20 }}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <Spinner size="lg" />
           </div>
         ) : (
-          <KanbanBoard
-            tickets={tickets}
-            onRefresh={handleRefresh}
-            activeTicketId={activeTicketId}
-          />
+          <KanbanBoard tickets={tickets} onRefresh={handleRefresh} activeTicketId={activeTicketId} />
         )}
       </div>
     </div>

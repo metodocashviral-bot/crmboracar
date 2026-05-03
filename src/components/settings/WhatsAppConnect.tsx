@@ -29,60 +29,72 @@ export default function WhatsAppConnect() {
   }
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-5">
-      <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Conexão WhatsApp</h3>
+    <div
+      style={{
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-xl)',
+        padding: 24,
+      }}
+    >
+      <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 16 }}>
+        Conexão WhatsApp
+      </p>
 
       {whatsappStatus === 'disconnected' && (
-        <div className="flex flex-col items-center gap-4 py-4">
-          <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center">
-            <WifiOff size={28} className="text-gray-400" />
+        <div className="flex flex-col items-center" style={{ gap: 16, padding: '16px 0' }}>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--bg-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <WifiOff size={28} style={{ color: 'var(--text-muted)' }} />
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">WhatsApp não conectado</p>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>WhatsApp não conectado</p>
           <Button onClick={handleConnect}>
-            <QrCode size={16} className="mr-2" />
+            <QrCode size={15} className="mr-2" />
             Conectar WhatsApp
           </Button>
         </div>
       )}
 
       {whatsappStatus === 'connecting' && (
-        <div className="flex flex-col items-center gap-4 py-4">
+        <div className="flex flex-col items-center" style={{ gap: 16, padding: '16px 0' }}>
           <Spinner size="lg" />
-          <p className="text-sm text-gray-500">Iniciando conexão...</p>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Iniciando conexão...</p>
         </div>
       )}
 
       {whatsappStatus === 'qr_code' && (
-        <div className="flex flex-col items-center gap-4 py-4">
-          <p className="text-sm text-gray-600 dark:text-gray-300 text-center">
+        <div className="flex flex-col items-center" style={{ gap: 16, padding: '16px 0' }}>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', textAlign: 'center' }}>
             Escaneie o QR Code com seu WhatsApp
           </p>
           {qrCode ? (
-            <div className="p-3 bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div style={{ padding: 12, background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)' }}>
               <img
                 src={qrCode.startsWith('data:') ? qrCode : `data:image/png;base64,${qrCode}`}
                 alt="QR Code WhatsApp"
-                className="w-52 h-52 object-contain"
+                style={{ width: 208, height: 208, objectFit: 'contain', display: 'block' }}
               />
             </div>
           ) : (
-            <div className="w-52 h-52 flex items-center justify-center bg-gray-50 dark:bg-slate-700 rounded-xl">
+            <div style={{ width: 208, height: 208, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-surface-2)', borderRadius: 'var(--radius-lg)' }}>
               <Spinner />
             </div>
           )}
-          <p className="text-xs text-gray-400">Atualizando automaticamente...</p>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>Atualizando automaticamente...</p>
         </div>
       )}
 
       {whatsappStatus === 'connected' && (
-        <div className="flex flex-col items-center gap-4 py-4">
-          <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-            <Wifi size={28} className="text-green-500" />
+        <div className="flex flex-col items-center" style={{ gap: 16, padding: '16px 0' }}>
+          <div style={{ position: 'relative' }}>
+            <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(33,209,98,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Wifi size={28} style={{ color: 'var(--brand-primary)' }} />
+            </div>
+            <span style={{ position: 'absolute', bottom: 2, right: 2, width: 14, height: 14, borderRadius: '50%', background: 'var(--brand-primary)', border: '2px solid var(--bg-surface)', display: 'block' }} />
           </div>
-          <div className="text-center">
-            <p className="text-sm font-semibold text-green-600 dark:text-green-400">Conectado ✓</p>
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--brand-primary)' }}>Conectado</p>
             {(connectedNumber || settings?.whatsapp_number) && (
-              <p className="text-xs text-gray-500 mt-1">
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
                 {connectedNumber || settings?.whatsapp_number}
               </p>
             )}

@@ -9,10 +9,13 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 dark:text-gray-400 transition-colors"
+      className="flex items-center justify-center transition-colors"
+      style={{ width: 32, height: 32, borderRadius: 'var(--radius-full)', color: 'var(--text-muted)' }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-surface-2)' }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '' }}
       title="Alternar tema"
     >
-      {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+      {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
     </button>
   )
 }

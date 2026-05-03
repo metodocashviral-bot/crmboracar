@@ -2,7 +2,6 @@
 
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { cn } from '@/lib/utils'
 import KanbanCard from './KanbanCard'
 import type { Ticket, TicketStatus } from '@/types'
 
@@ -10,45 +9,67 @@ interface KanbanColumnProps {
   id: TicketStatus
   title: string
   tickets: Ticket[]
-  color: string
+  accent: string
+  counterStyle: React.CSSProperties
   activeTicketId?: string | null
 }
 
-export default function KanbanColumn({ id, title, tickets, color, activeTicketId }: KanbanColumnProps) {
+export default function KanbanColumn({ id, title, tickets, accent, counterStyle, activeTicketId }: KanbanColumnProps) {
   const { isOver, setNodeRef } = useDroppable({ id })
 
   return (
-    <div className="flex flex-col w-80 flex-shrink-0">
-      <div className={cn('flex items-center gap-2 px-3 py-2 rounded-t-xl', color)}>
-        <span className="font-semibold text-sm text-white">{title}</span>
-        <span className="ml-auto bg-white/20 text-white text-xs font-bold rounded-full px-2 py-0.5">
-          {tickets.length}
-        </span>
-      </div>
-
+    <div className="flex flex-col" style={{ minWidth: 0 }}>
+      {/* Column container */}
       <div
-        ref={setNodeRef}
-        className={cn(
-          'flex-1 rounded-b-xl p-2 space-y-2 min-h-[200px] transition-colors',
-          isOver
-            ? 'bg-green-50 dark:bg-green-900/10 border-2 border-dashed border-green-400'
-            : 'bg-gray-100 dark:bg-slate-800/50 border-2 border-transparent'
-        )}
+        style={{
+          background: 'var(--bg-surface-2)',
+          borderRadius: 'var(--radius-lg)',
+          padding: 12,
+          borderTop: `3px solid ${accent}`,
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
       >
-        <SortableContext items={tickets.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-          {tickets.map((ticket) => (
-            <KanbanCard
-              key={ticket.id}
-              ticket={ticket}
-              isActive={ticket.id === activeTicketId}
-            />
-          ))}
-        </SortableContext>
-        {tickets.length === 0 && (
-          <div className="flex items-center justify-center h-20 text-xs text-gray-400 dark:text-slate-500">
-            Nenhum atendimento
+        {/* Header */}
+        <div className="flex items-center justify-between" style={{ padding: '4px 4px 12px 4px' }}>
+          <div className="flex items-center gap-2">
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: accent, flexShrink: 0 }} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{title}</span>
           </div>
-        )}
+          <span
+            className="font-bold"
+            style={{ fontSize: 11, padding: '2px 8px', borderRadius: 'var(--radius-full)', ...counterStyle }}
+          >
+            {tickets.length}
+          </span>
+        </div>
+
+        {/* Drop area */}
+        <div
+          ref={setNodeRef}
+          style={{
+            flex: 1,
+            minHeight: 200,
+            borderRadius: 'var(--radius-md)',
+            border: isOver ? '2px dashed var(--brand-primary)' : '2px solid transparent',
+            background: isOver ? 'var(--brand-glow)' : 'transparent',
+            transition: 'var(--transition-fast)',
+            overflowY: 'auto',
+            padding: isOver ? 4 : 0,
+          }}
+        >
+          <SortableContext items={tickets.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+            {tickets.map((ticket) => (
+              <KanbanCard key={ticket.id} ticket={ticket} isActive={ticket.id === activeTicketId} />
+            ))}
+          </SortableContext>
+          {tickets.length === 0 && (
+            <div className="flex items-center justify-center" style={{ height: 80, fontSize: 12, color: 'var(--text-muted)' }}>
+              Nenhum atendimento
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

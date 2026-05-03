@@ -1,33 +1,56 @@
 import { cn } from '@/lib/utils'
 import { ButtonHTMLAttributes, forwardRef } from 'react'
+import Spinner from './Spinner'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger'
   size?: 'sm' | 'md' | 'lg'
+  loading?: boolean
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'primary', size = 'md', children, ...props }, ref) => {
+  ({ className, variant = 'primary', size = 'md', loading, disabled, children, style, ...props }, ref) => {
     return (
       <button
         ref={ref}
+        disabled={disabled || loading}
         className={cn(
-          'inline-flex items-center justify-center font-medium rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed',
+          'inline-flex items-center justify-center font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed select-none',
           {
-            'bg-green-500 hover:bg-green-600 text-white': variant === 'primary',
-            'bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200': variant === 'secondary',
-            'bg-red-500 hover:bg-red-600 text-white': variant === 'danger',
-            'hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-300': variant === 'ghost',
+            'text-white': variant === 'primary' || variant === 'danger',
+            'border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)]': variant === 'secondary',
+            'text-[var(--text-secondary)] hover:bg-[var(--bg-surface-2)]': variant === 'ghost',
+            'bg-[#ef4444] hover:bg-[#dc2626]': variant === 'danger',
           },
           {
-            'text-xs px-2.5 py-1.5': size === 'sm',
-            'text-sm px-4 py-2': size === 'md',
-            'text-base px-5 py-2.5': size === 'lg',
+            'h-8 px-3 text-xs rounded-[var(--radius-sm)]': size === 'sm',
+            'h-9 px-4 text-sm rounded-[var(--radius-md)]': size === 'md',
+            'h-10 px-5 text-sm rounded-[var(--radius-md)]': size === 'lg',
           },
           className
         )}
+        style={variant === 'primary' ? {
+          background: 'var(--brand-primary)',
+          borderRadius: 'var(--radius-md)',
+          ...style,
+        } : style}
+        onMouseEnter={(e) => {
+          if (variant === 'primary') {
+            (e.currentTarget as HTMLButtonElement).style.background = 'var(--brand-primary-hover)'
+            ;(e.currentTarget as HTMLButtonElement).style.boxShadow = 'var(--shadow-brand)'
+          }
+          props.onMouseEnter?.(e)
+        }}
+        onMouseLeave={(e) => {
+          if (variant === 'primary') {
+            (e.currentTarget as HTMLButtonElement).style.background = 'var(--brand-primary)'
+            ;(e.currentTarget as HTMLButtonElement).style.boxShadow = ''
+          }
+          props.onMouseLeave?.(e)
+        }}
         {...props}
       >
+        {loading ? <Spinner size="sm" className="mr-2" /> : null}
         {children}
       </button>
     )

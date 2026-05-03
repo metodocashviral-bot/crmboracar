@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useCallback, use } from 'react'
+import { useState, useCallback, use, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useEffect } from 'react'
 import { useAppStore } from '@/stores/appStore'
 import ChatHeader from '@/components/chat/ChatHeader'
 import ChatWindow from '@/components/chat/ChatWindow'
@@ -52,7 +51,7 @@ export default function ChatPage({ params }: { params: Promise<{ ticketId: strin
 
   if (!ticket) {
     return (
-      <div className="flex h-full items-center justify-center text-gray-400">
+      <div className="flex h-full items-center justify-center" style={{ color: 'var(--text-muted)', fontSize: 14 }}>
         Atendimento não encontrado
       </div>
     )
@@ -60,17 +59,22 @@ export default function ChatPage({ params }: { params: Promise<{ ticketId: strin
 
   return (
     <div className="flex h-full overflow-hidden">
-      {/* Ticket list sidebar */}
-      <div className="hidden lg:flex flex-col w-72 border-r border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden flex-shrink-0">
-        <div className="px-3 py-3 border-b border-gray-200 dark:border-slate-700">
-          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+      {/* Compact ticket list sidebar */}
+      <div
+        className="hidden lg:flex flex-col flex-shrink-0"
+        style={{ width: 280, borderRight: '1px solid var(--border)', background: 'var(--bg-surface)', overflow: 'hidden' }}
+      >
+        <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
             Atendimentos
           </p>
         </div>
-        <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
-          {tickets.map((t) => (
-            <KanbanCard key={t.id} ticket={t} isActive={t.id === ticketId} />
-          ))}
+        <div className="flex-1 overflow-y-auto" style={{ padding: '8px 8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {tickets.map((t) => (
+              <KanbanCard key={t.id} ticket={t} isActive={t.id === ticketId} />
+            ))}
+          </div>
         </div>
       </div>
 

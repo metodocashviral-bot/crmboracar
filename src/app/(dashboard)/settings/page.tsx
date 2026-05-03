@@ -15,9 +15,9 @@ export default async function SettingsPage() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <Header title="Configurações" />
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-2xl mx-auto space-y-6">
+      <Header title="Configurações" subtitle="Empresa · WhatsApp · Atendentes" />
+      <div className="flex-1 overflow-y-auto" style={{ padding: 24 }}>
+        <div style={{ maxWidth: 680, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
           <CompanySettings />
           <WhatsAppConnect />
           <AgentManager />

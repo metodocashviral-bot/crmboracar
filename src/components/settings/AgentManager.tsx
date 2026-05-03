@@ -50,45 +50,74 @@ export default function AgentManager() {
   }
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-5">
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="font-semibold text-gray-900 dark:text-white">Atendentes</h3>
+    <div
+      style={{
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-xl)',
+        padding: 24,
+      }}
+    >
+      <div className="flex items-center justify-between" style={{ marginBottom: 20 }}>
+        <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+          Atendentes
+        </p>
         <Button size="sm" onClick={() => setCreateOpen(true)}>
-          <UserPlus size={14} className="mr-1.5" />
+          <UserPlus size={13} className="mr-1.5" />
           Novo Atendente
         </Button>
       </div>
 
       {loading ? (
-        <p className="text-sm text-gray-400 text-center py-4">Carregando...</p>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: '16px 0' }}>Carregando...</p>
       ) : (
-        <div className="space-y-2">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {agents.map((agent) => (
             <div
               key={agent.id}
-              className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '10px 12px',
+                borderRadius: 'var(--radius-lg)',
+                border: '1px solid var(--border)',
+                background: 'var(--bg-base)',
+                transition: 'var(--transition-fast)',
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'var(--bg-surface-2)' }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'var(--bg-base)' }}
             >
               <Avatar name={agent.full_name} size="sm" />
-              <div className="flex-1 min-w-0">
+              <div style={{ flex: 1, minWidth: 0 }}>
                 {editingId === agent.id ? (
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center" style={{ gap: 4 }}>
                     <input
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter') saveName(agent) }}
-                      className="text-sm px-2 py-0.5 rounded border border-green-400 focus:outline-none dark:bg-slate-700 dark:text-white w-full"
+                      style={{
+                        fontSize: 13,
+                        padding: '2px 8px',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--brand-primary)',
+                        background: 'var(--bg-surface)',
+                        color: 'var(--text-primary)',
+                        outline: 'none',
+                        width: '100%',
+                      }}
                       autoFocus
                     />
-                    <button onClick={() => saveName(agent)} className="p-1 text-green-500 hover:text-green-600">
+                    <button onClick={() => saveName(agent)} style={{ padding: 4, color: 'var(--brand-primary)', cursor: 'pointer' }}>
                       <Check size={14} />
                     </button>
-                    <button onClick={() => setEditingId(null)} className="p-1 text-gray-400 hover:text-gray-600">
+                    <button onClick={() => setEditingId(null)} style={{ padding: 4, color: 'var(--text-muted)', cursor: 'pointer' }}>
                       <X size={14} />
                     </button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                  <div className="flex items-center" style={{ gap: 6 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }} className="truncate">
                       {agent.full_name}
                     </p>
                     <Badge variant={agent.role === 'admin' ? 'purple' : 'default'}>
@@ -97,13 +126,15 @@ export default function AgentManager() {
                     {!agent.is_active && <Badge variant="danger">Inativo</Badge>}
                   </div>
                 )}
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{agent.email}</p>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)' }} className="truncate">{agent.email}</p>
               </div>
 
-              <div className="flex items-center gap-1">
+              <div className="flex items-center" style={{ gap: 2 }}>
                 <button
                   onClick={() => { setEditingId(agent.id); setEditName(agent.full_name) }}
-                  className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                  style={{ padding: 6, borderRadius: 'var(--radius-sm)', color: 'var(--text-muted)', cursor: 'pointer', transition: 'var(--transition-fast)' }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-primary)'; (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-surface-2)' }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-muted)'; (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
                   title="Editar nome"
                 >
                   <Pencil size={14} />
@@ -111,7 +142,9 @@ export default function AgentManager() {
                 {agent.role !== 'admin' && (
                   <button
                     onClick={() => toggleActive(agent)}
-                    className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                    style={{ padding: 6, borderRadius: 'var(--radius-sm)', color: 'var(--text-muted)', cursor: 'pointer', transition: 'var(--transition-fast)' }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-primary)'; (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-surface-2)' }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-muted)'; (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
                     title={agent.is_active ? 'Desativar' : 'Ativar'}
                   >
                     {agent.is_active ? <UserX size={14} /> : <UserCheck size={14} />}

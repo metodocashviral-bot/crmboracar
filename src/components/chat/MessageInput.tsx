@@ -2,7 +2,6 @@
 
 import { useState, useRef } from 'react'
 import { Send } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 interface MessageInputProps {
   onSend: (content: string) => Promise<void>
@@ -19,52 +18,74 @@ export default function MessageInput({ onSend, disabled }: MessageInputProps) {
     if (!text || sending || disabled) return
     setSending(true)
     setContent('')
+    if (ref.current) { ref.current.style.height = 'auto' }
     await onSend(text)
     setSending(false)
     ref.current?.focus()
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
   }
 
+  const canSend = content.trim() && !sending && !disabled
+
   return (
-    <div className="px-4 py-3 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-700 flex-shrink-0">
-      <div className="flex items-end gap-2 bg-gray-50 dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 px-3 py-2">
+    <div
+      className="flex-shrink-0"
+      style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--border)', padding: '12px 16px' }}
+    >
+      <div className="flex items-end gap-2">
         <textarea
           ref={ref}
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={(e) => {
+            setContent(e.target.value)
+            e.target.style.height = 'auto'
+            e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
+          }}
           onKeyDown={handleKeyDown}
           placeholder="Digite uma mensagem... (Enter para enviar)"
           rows={1}
           disabled={disabled || sending}
-          className="flex-1 bg-transparent text-sm text-gray-900 dark:text-white placeholder-gray-400 resize-none focus:outline-none max-h-32 leading-5"
-          style={{ minHeight: '24px' }}
-          onInput={(e) => {
-            const el = e.currentTarget
-            el.style.height = 'auto'
-            el.style.height = Math.min(el.scrollHeight, 128) + 'px'
+          style={{
+            flex: 1,
+            minHeight: 40,
+            maxHeight: 120,
+            resize: 'none',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '10px 14px',
+            fontSize: 14,
+            color: 'var(--text-primary)',
+            background: 'var(--bg-base)',
+            outline: 'none',
+            lineHeight: '22px',
+            transition: 'var(--transition-fast)',
           }}
+          onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--brand-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--brand-glow)' }}
+          onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = '' }}
         />
         <button
           onClick={handleSend}
-          disabled={!content.trim() || sending || disabled}
-          className={cn(
-            'p-1.5 rounded-lg transition-colors flex-shrink-0',
-            content.trim() && !sending && !disabled
-              ? 'bg-green-500 text-white hover:bg-green-600'
-              : 'text-gray-300 dark:text-slate-600 cursor-not-allowed'
-          )}
+          disabled={!canSend}
+          className="flex items-center justify-center flex-shrink-0 transition-all"
+          style={{
+            width: 40, height: 40,
+            borderRadius: 'var(--radius-full)',
+            background: canSend ? 'var(--brand-primary)' : 'var(--bg-surface-2)',
+            color: canSend ? 'white' : 'var(--text-muted)',
+            cursor: canSend ? 'pointer' : 'not-allowed',
+            transition: 'var(--transition-fast)',
+          }}
+          onMouseEnter={(e) => { if (canSend) { (e.currentTarget as HTMLButtonElement).style.background = 'var(--brand-primary-hover)'; (e.currentTarget as HTMLButtonElement).style.boxShadow = 'var(--shadow-brand)' } }}
+          onMouseLeave={(e) => { if (canSend) { (e.currentTarget as HTMLButtonElement).style.background = 'var(--brand-primary)'; (e.currentTarget as HTMLButtonElement).style.boxShadow = '' } }}
         >
           <Send size={16} />
         </button>
       </div>
       {disabled && (
-        <p className="text-xs text-center text-gray-400 mt-1">
+        <p style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginTop: 6 }}>
           WhatsApp desconectado — conecte em Configurações
         </p>
       )}
