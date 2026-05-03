@@ -38,13 +38,15 @@ export async function POST(req: NextRequest) {
     email,
     password,
     email_confirm: true,
+    user_metadata: { full_name },
   })
 
   if (authError) return NextResponse.json({ error: authError.message }, { status: 400 })
 
+  // Use upsert — a DB trigger may have already created the profile row on auth.users insert
   const { data: newProfile, error: profileError } = await getSupabaseAdmin()
     .from('profiles')
-    .insert({ id: authUser.user.id, full_name, email, role: 'agent' })
+    .upsert({ id: authUser.user.id, full_name, email, role: 'agent', is_active: true }, { onConflict: 'id' })
     .select()
     .single()
 
