@@ -50,9 +50,12 @@ export async function setWebhook(cfg: EvolutionConfig, webhookUrl: string) {
   return evolutionFetch(`/webhook/set/${cfg.instance}`, cfg, {
     method: 'POST',
     body: JSON.stringify({
-      url: webhookUrl,
-      webhook_by_events: false,
-      events: ['MESSAGES_UPSERT', 'CONNECTION_UPDATE'],
+      webhook: {
+        url: webhookUrl,
+        byEvents: false,
+        base64: false,
+        events: ['MESSAGES_UPSERT', 'CONNECTION_UPDATE'],
+      },
     }),
   })
 }
