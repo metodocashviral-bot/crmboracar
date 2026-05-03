@@ -13,7 +13,7 @@ export function useTickets(agentFilter?: string, search?: string) {
     let query = supabase
       .from('tickets')
       .select(`
-        id, status, unread_count, last_message_at, assigned_agent_id, contact_id,
+        id, status, unread_count, last_message_at, assigned_agent_id, contact_id, priority, created_at,
         contact:contacts(id, name, phone, profile_pic_url),
         assigned_agent:profiles(id, full_name)
       `)
