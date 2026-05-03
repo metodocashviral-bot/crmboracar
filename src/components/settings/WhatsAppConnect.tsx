@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { QrCode, Wifi, WifiOff, Unplug, RefreshCw } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { QrCode, Wifi, WifiOff, Unplug, RefreshCw, Link2 } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Spinner from '@/components/ui/Spinner'
 import { useWhatsAppStatus } from '@/hooks/useWhatsAppStatus'
@@ -13,6 +13,28 @@ export default function WhatsAppConnect() {
   const { whatsappStatus, settings, setSettings } = useAppStore()
   const { qrCode, connectedNumber, connect, disconnect } = useWhatsAppStatus()
   const [syncing, setSyncing] = useState(false)
+  const [webhookSyncing, setWebhookSyncing] = useState(false)
+
+  // Auto-sync webhook URL whenever the component loads in connected state
+  useEffect(() => {
+    if (whatsappStatus === 'connected') {
+      fetch('/api/whatsapp/sync-webhook', { method: 'POST' }).catch(() => {})
+    }
+  }, [whatsappStatus])
+
+  async function handleSyncWebhook() {
+    setWebhookSyncing(true)
+    try {
+      const res = await fetch('/api/whatsapp/sync-webhook', { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error)
+      toast.success('Webhook atualizado com sucesso')
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao atualizar webhook')
+    } finally {
+      setWebhookSyncing(false)
+    }
+  }
 
   async function handleSync() {
     setSyncing(true)
@@ -115,12 +137,17 @@ export default function WhatsAppConnect() {
               </p>
             )}
           </div>
-          <div className="flex items-center" style={{ gap: 8 }}>
-            <Button variant="secondary" onClick={handleSync} disabled={syncing}>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: 280 }}>
+            <Button variant="secondary" onClick={handleSyncWebhook} disabled={webhookSyncing} style={{ width: '100%' }}>
+              <Link2 size={13} className="mr-1.5" />
+              {webhookSyncing ? 'Atualizando...' : 'Atualizar Webhook'}
+            </Button>
+            <Button variant="secondary" onClick={handleSync} disabled={syncing} style={{ width: '100%' }}>
               <RefreshCw size={13} className="mr-1.5" style={{ animation: syncing ? 'spin 1s linear infinite' : 'none' }} />
               {syncing ? 'Importando...' : 'Importar Conversas'}
             </Button>
-            <Button variant="danger" onClick={handleDisconnect}>
+            <Button variant="danger" onClick={handleDisconnect} style={{ width: '100%' }}>
               <Unplug size={14} className="mr-2" />
               Desconectar
             </Button>
