@@ -45,14 +45,14 @@ export function useNotifications() {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${profile.id}` },
-        (payload) => {
+        (payload: { new: Notification }) => {
           setNotifications((prev) => [payload.new as Notification, ...prev])
         }
       )
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${profile.id}` },
-        (payload) => {
+        (payload: { new: Notification }) => {
           setNotifications((prev) => prev.map((n) => n.id === payload.new.id ? payload.new as Notification : n))
         }
       )
