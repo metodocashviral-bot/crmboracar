@@ -3,7 +3,7 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useRouter } from 'next/navigation'
-import { PlayCircle, Calendar } from 'lucide-react'
+import { PlayCircle, Calendar, Eye } from 'lucide-react'
 import { timeAgo, formatPhone } from '@/lib/utils'
 import Avatar from '@/components/ui/Avatar'
 import type { Ticket } from '@/types'
@@ -177,25 +177,46 @@ export default function KanbanCard({ ticket, isActive, isWaiting, onStartAttenda
         )}
       </div>
 
-      {/* Iniciar Atendimento */}
+      {/* Waiting actions */}
       {isWaiting && onStartAttendance && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onStartAttendance(ticket) }}
-          style={{
-            width: '100%', height: 34, marginBottom: 6, marginTop: -2,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            background: accent, color: 'white', border: 'none',
-            borderRadius: '0 0 14px 14px',
-            fontSize: 12, fontWeight: 600, letterSpacing: '0.01em',
-            cursor: 'pointer',
-            transition: 'opacity 0.15s ease',
-          }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.85' }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '1' }}
-        >
-          <PlayCircle size={13} />
-          Iniciar Atendimento
-        </button>
+        <div style={{ display: 'flex', gap: 0, marginBottom: 6, marginTop: -2 }}>
+          {/* Ver conversa */}
+          <button
+            onClick={(e) => { e.stopPropagation(); router.push(`/chat/${ticket.id}?preview=true`) }}
+            style={{
+              flex: 1, height: 34,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+              background: '#f3f4f6', color: '#6b7280', border: 'none',
+              borderRadius: '0 0 0 14px',
+              fontSize: 12, fontWeight: 600,
+              cursor: 'pointer', transition: 'background 0.15s ease',
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#e5e7eb' }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#f3f4f6' }}
+          >
+            <Eye size={13} />
+            Visualizar
+          </button>
+          {/* Divider */}
+          <div style={{ width: 1, background: '#e5e7eb', flexShrink: 0 }} />
+          {/* Iniciar atendimento */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onStartAttendance(ticket) }}
+            style={{
+              flex: 1, height: 34,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+              background: accent, color: 'white', border: 'none',
+              borderRadius: '0 0 14px 0',
+              fontSize: 12, fontWeight: 600,
+              cursor: 'pointer', transition: 'opacity 0.15s ease',
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.85' }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = '1' }}
+          >
+            <PlayCircle size={13} />
+            Iniciar
+          </button>
+        </div>
       )}
     </div>
   )

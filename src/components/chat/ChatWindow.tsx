@@ -15,9 +15,10 @@ import toast from 'react-hot-toast'
 interface ChatWindowProps {
   ticket: Ticket
   onUpdate: () => void
+  preview?: boolean
 }
 
-export default function ChatWindow({ ticket, onUpdate }: ChatWindowProps) {
+export default function ChatWindow({ ticket, onUpdate, preview }: ChatWindowProps) {
   const { profile, whatsappStatus } = useAppStore()
   const { messages, loading, addMessage, removeMessage } = useMessages(ticket.id)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -30,6 +31,7 @@ export default function ChatWindow({ ticket, onUpdate }: ChatWindowProps) {
   useEffect(() => {
     if (initializedRef.current) return
     initializedRef.current = true
+    if (preview) return // view-only: skip marking read and system message
     const supabase = createClient()
     async function init() {
       await supabase.from('messages').update({ is_read: true }).eq('ticket_id', ticket.id).eq('is_read', false)
@@ -138,7 +140,19 @@ export default function ChatWindow({ ticket, onUpdate }: ChatWindowProps) {
           </>
         )}
       </div>
-      <MessageInput onSend={handleSend} onSendMedia={handleSendMedia} disabled={whatsappStatus !== 'connected'} />
+      {preview ? (
+        <div style={{
+          flexShrink: 0, padding: '12px 20px',
+          background: '#fffbeb', borderTop: '1px solid #fde68a',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+        }}>
+          <span style={{ fontSize: 13, color: '#92400e' }}>
+            👁 Modo visualização — o cliente não foi notificado
+          </span>
+        </div>
+      ) : (
+        <MessageInput onSend={handleSend} onSendMedia={handleSendMedia} disabled={whatsappStatus !== 'connected'} />
+      )}
     </div>
   )
 }

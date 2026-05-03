@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, use, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAppStore } from '@/stores/appStore'
 import ChatHeader from '@/components/chat/ChatHeader'
@@ -13,6 +14,8 @@ import type { Ticket } from '@/types'
 
 export default function ChatPage({ params }: { params: Promise<{ ticketId: string }> }) {
   const { ticketId } = use(params)
+  const searchParams = useSearchParams()
+  const preview = searchParams.get('preview') === 'true'
   const { setActiveTicketId } = useAppStore()
   const [ticket, setTicket] = useState<Ticket | null>(null)
   const [loadingTicket, setLoadingTicket] = useState(true)
@@ -81,7 +84,7 @@ export default function ChatPage({ params }: { params: Promise<{ ticketId: strin
       {/* Chat area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <ChatHeader ticket={ticket} onUpdate={fetchTicket} />
-        <ChatWindow ticket={ticket} onUpdate={fetchTicket} />
+        <ChatWindow ticket={ticket} onUpdate={fetchTicket} preview={preview} />
       </div>
     </div>
   )
