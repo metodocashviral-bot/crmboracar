@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
   const cfg = { url: evolutionUrl, apiKey: evolutionKey, instance: settings.evolution_instance }
 
-  // Fetch last 20 individual chats (no groups)
+  // Fetch last 15 individual chats (no groups), sorted by most recent
   let chats: any[] = []
   try {
     const raw = await fetchChats(cfg)
@@ -39,7 +39,12 @@ export async function POST(req: NextRequest) {
         const jid: string = c.id || c.remoteJid || ''
         return jid.includes('@s.whatsapp.net')
       })
-      .slice(0, 20)
+      .sort((a: any, b: any) => {
+        const tsA = Number(a.lastMessage?.messageTimestamp || a.updatedAt || 0)
+        const tsB = Number(b.lastMessage?.messageTimestamp || b.updatedAt || 0)
+        return tsB - tsA
+      })
+      .slice(0, 15)
   } catch (err: any) {
     return NextResponse.json({ error: `Erro ao buscar conversas: ${err.message}` }, { status: 500 })
   }
